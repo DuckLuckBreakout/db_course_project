@@ -7,3 +7,10 @@ type User struct {
 	About    string `json:"about"`
 	Email    string `json:"email" valid:"notnull"`
 }
+
+// Информация для обновления пользователя
+type UserUpdate struct {
+	Fullname string `json:"fullname"`
+	About    string `json:"about"`
+	Email    string `json:"email"`
+}
