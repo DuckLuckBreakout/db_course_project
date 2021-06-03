@@ -36,7 +36,7 @@ func (r *Repository) Create(user *models.User) error {
 
 func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models.User, error) {
 	rows, _ := r.db.Query(
-		"SELECT nickname, fullname, about, email " +
+		"SELECT nickname, fullname, about, email "+
 			"FROM users "+
 			"WHERE nickname = $1 OR email = $2",
 		user.Nickname,
@@ -47,11 +47,11 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 	for rows.Next() {
 		rowUser := &models.User{}
 		err := rows.Scan(
-				&rowUser.Nickname,
-				&rowUser.Fullname,
-				&rowUser.About,
-				&rowUser.Email,
-			)
+			&rowUser.Nickname,
+			&rowUser.Fullname,
+			&rowUser.About,
+			&rowUser.Email,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -59,4 +59,23 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 	}
 
 	return users, nil
+}
+
+func (r *Repository) GetUserByNickname(user *models.User) error {
+	row := r.db.QueryRow(
+		"SELECT fullname, about, email "+
+			"FROM users "+
+			"WHERE nickname = $1",
+		user.Nickname,
+	)
+
+	if err := row.Scan(
+		&user.Fullname,
+		&user.About,
+		&user.Email,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
