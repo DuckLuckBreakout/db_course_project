@@ -15,3 +15,8 @@ CREATE TABLE users (
     about TEXT,
     email TEXT UNIQUE NOT NULL
 );
+GRANT ALL PRIVILEGES ON TABLE users TO forum_root;
+
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO forum_root;
+
