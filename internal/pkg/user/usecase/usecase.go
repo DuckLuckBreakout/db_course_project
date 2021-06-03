@@ -6,12 +6,12 @@ import (
 )
 
 type UseCase struct {
-	Repository   user.Repository
+	Repository user.Repository
 }
 
 func NewUseCase(repo user.Repository) user.UseCase {
 	return &UseCase{
-		Repository:   repo,
+		Repository: repo,
 	}
 }
 
@@ -24,4 +24,11 @@ func (u UseCase) Create(user *models.User) ([]*models.User, error) {
 		return users, nil
 	}
 	return nil, nil
+}
+
+func (u UseCase) Profile(user *models.User) error {
+	if err := u.Repository.GetUserByNickname(user); err != nil {
+		return err
+	}
+	return nil
 }

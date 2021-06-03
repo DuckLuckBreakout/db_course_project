@@ -5,7 +5,7 @@ import (
 )
 
 type Error struct {
-	Message string `json:"error"`
+	Message string `json:"message"`
 }
 
 func (err Error) Error() string {
@@ -21,14 +21,11 @@ func CreateError(err error) error {
 }
 
 var (
-	ErrUserUnauthorized error = Error{
-		Message: "user is unauthorized",
+	ErrUserNotFound error = Error{
+		Message: "Can't find user with id #42\n",
 	}
 	ErrInternalError error = Error{
 		Message: "something went wrong",
-	}
-	ErrUserNotFound error = Error{
-		Message: "user not found",
 	}
 	ErrSessionNotFound error = Error{
 		Message: "session not found",

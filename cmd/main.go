@@ -2,14 +2,14 @@ package main
 
 import (
 	"database/sql"
+	user_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/handler"
+	user_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/repository"
+	user_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/usecase"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"time"
-	"github.com/gorilla/mux"
-	user_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/handler"
-	user_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/repository"
-	user_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/usecase"
 )
 
 func main() {
@@ -27,8 +27,6 @@ func main() {
 	}
 	defer postgreSqlConn.Close()
 
-
-
 	userRepository := user_repository.NewRepository(postgreSqlConn)
 	userUseCase := user_usecase.NewUseCase(userRepository)
 	userHandler := user_handler.NewHandler(userUseCase)
@@ -36,7 +34,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/user/{nickname:[a-z]+}/create", userHandler.Create).Methods("POST")
-
+	router.HandleFunc("/api/user/{nickname:[a-z]+}/profile", userHandler.Profile).Methods("GET")
 
 	server := &http.Server{
 		Addr:         ":8080",
