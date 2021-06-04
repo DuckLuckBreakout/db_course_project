@@ -1,4 +1,5 @@
 CREATE USER forum_root WITH password 'root';
+CREATE EXTENSION citext;
 
 DROP DATABASE IF EXISTS forum;
 CREATE DATABASE forum
@@ -10,10 +11,10 @@ GRANT ALL PRIVILEGES ON database forum TO forum_root;
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
     id SERIAL NOT NULL PRIMARY KEY,
-    nickname TEXT UNIQUE,
+    nickname CITEXT UNIQUE,
     fullname TEXT NOT NULL,
     about TEXT,
-    email TEXT UNIQUE NOT NULL
+    email CITEXT UNIQUE NOT NULL
 );
 GRANT ALL PRIVILEGES ON TABLE users TO forum_root;
 

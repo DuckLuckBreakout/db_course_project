@@ -24,7 +24,7 @@ var (
 	ErrUserNotFound error = Error{
 		Message: "Can't find user with id #42\n",
 	}
-	ErrInternalError error = Error{
+	ErrUserAlreadyCreatedError error = Error{
 		Message: "something went wrong",
 	}
 	ErrSessionNotFound error = Error{

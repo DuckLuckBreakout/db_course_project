@@ -33,12 +33,12 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/user/{nickname:[a-z]+}/create", userHandler.Create).Methods("POST")
-	router.HandleFunc("/api/user/{nickname:[a-z]+}/profile", userHandler.Profile).Methods("GET")
-	router.HandleFunc("/api/user/{nickname:[a-z]+}/profile", userHandler.Update).Methods("POST")
+	router.HandleFunc("/api/user/{nickname}/create", userHandler.Create).Methods("POST")
+	router.HandleFunc("/api/user/{nickname}/profile", userHandler.Profile).Methods("GET")
+	router.HandleFunc("/api/user/{nickname}/profile", userHandler.Update).Methods("POST")
 
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":5000",
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,

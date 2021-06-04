@@ -27,8 +27,7 @@ func (r *Repository) Create(user *models.User) error {
 		user.Email,
 	)
 
-	var userId uint64
-	if err := row.Scan(&userId); err != nil {
+	if err := row.Err(); err != nil {
 		return err
 	}
 
