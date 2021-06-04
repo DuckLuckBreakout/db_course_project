@@ -82,7 +82,7 @@ func (r *Repository) GetUserByNickname(user *models.User) error {
 
 func (r *Repository) Update(user *models.User) error {
 	row, err := r.db.Exec(
-		"UPDATE users " +
+		"UPDATE users "+
 			"SET fullname = $2, about = $3, email = $4 "+
 			"WHERE nickname = $1",
 		user.Nickname,
