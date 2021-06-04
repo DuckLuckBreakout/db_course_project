@@ -11,7 +11,11 @@ type Repository struct {
 }
 
 func (r Repository) Clear() error {
-	panic("implement me")
+	row := r.db.QueryRow("TRUNCATE TABLE users")
+	if err := row.Err(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r Repository) Status() (*models.Status, error) {

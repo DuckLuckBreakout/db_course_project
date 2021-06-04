@@ -10,7 +10,7 @@ type UseCase struct {
 }
 
 func (u UseCase) Clear() error {
-	panic("implement me")
+	return u.Repository.Clear()
 }
 
 func (u UseCase) Status() (*models.Status, error) {
