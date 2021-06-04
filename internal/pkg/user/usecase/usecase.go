@@ -32,3 +32,10 @@ func (u UseCase) Profile(user *models.User) error {
 	}
 	return nil
 }
+
+func (u UseCase) UpdateProfile(user *models.User) error {
+	if err := u.Repository.Update(user); err != nil {
+		return err
+	}
+	return nil
+}
