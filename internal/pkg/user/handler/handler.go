@@ -51,21 +51,11 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Profile(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
-	}
-	defer r.Body.Close()
-
 	var userInfo models.User
-	err = json.Unmarshal(body, &userInfo)
-	if err != nil {
-		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
-	}
 
 	userInfo.Nickname = mux.Vars(r)["nickname"]
 
-	err = h.UseCase.Profile(&userInfo)
+	err := h.UseCase.Profile(&userInfo)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
