@@ -19,7 +19,12 @@ func (r Repository) Clear() error {
 }
 
 func (r Repository) Status() (*models.Status, error) {
-	panic("implement me")
+	var status models.Status
+	row := r.db.QueryRow("SELECT COUNT(*) FROM users")
+	if err := row.Scan(&status.User); err != nil {
+		return nil, err
+	}
+	return &status, nil
 }
 
 func NewRepository(db *sql.DB) service.Repository {

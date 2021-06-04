@@ -21,7 +21,12 @@ func (h Handler) Clear(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Status(w http.ResponseWriter, r *http.Request) {
-	panic("implement me")
+	status, err := h.UseCase.Status()
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+	http_utils.SetJSONResponse(w, status, http.StatusOK)
 }
 
 func NewHandler(useCase service.UseCase) service.Handler {
