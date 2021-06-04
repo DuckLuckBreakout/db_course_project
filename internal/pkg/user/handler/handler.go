@@ -37,12 +37,17 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 	newUser.Nickname = mux.Vars(r)["nickname"]
 
 	result, err := h.UseCase.Create(&newUser)
+	if err == errors.ErrUserAlreadyCreatedError {
+		http_utils.SetJSONResponse(w, result, http.StatusConflict)
+		return
+	}
+
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.CreateError(err), http.StatusConflict)
 		return
 	}
 
-	http_utils.SetJSONResponse(w, result, http.StatusCreated)
+	http_utils.SetJSONResponse(w, result[0], http.StatusCreated)
 }
 
 func (h Handler) Profile(w http.ResponseWriter, r *http.Request) {

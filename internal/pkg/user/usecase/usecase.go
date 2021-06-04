@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/user"
 )
@@ -19,11 +20,13 @@ func (u UseCase) Create(user *models.User) ([]*models.User, error) {
 	if err := u.Repository.Create(user); err != nil {
 		users, err := u.Repository.GetAllUsersByNicknameAndEmail(user)
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
-		return users, nil
+		return users, errors.ErrUserAlreadyCreatedError
 	}
-	return nil, nil
+	result := make([]*models.User, 0)
+	result = append(result, user)
+	return result, nil
 }
 
 func (u UseCase) Profile(user *models.User) error {
