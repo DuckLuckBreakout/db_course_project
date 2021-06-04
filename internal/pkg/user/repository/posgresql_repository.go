@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/user"
 )
@@ -75,6 +76,29 @@ func (r *Repository) GetUserByNickname(user *models.User) error {
 		&user.Email,
 	); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) Update(user *models.User) error {
+	row, err := r.db.Exec(
+		"UPDATE users " +
+			"SET fullname = $2, about = $3, email = $4 "+
+			"WHERE nickname = $1",
+		user.Nickname,
+		user.Fullname,
+		user.About,
+		user.Email,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	affectedRowsCount, _ := row.RowsAffected()
+	if affectedRowsCount == 0 {
+		return errors.ErrUserNotFound
 	}
 
 	return nil

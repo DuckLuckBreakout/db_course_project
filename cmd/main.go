@@ -35,6 +35,7 @@ func main() {
 
 	router.HandleFunc("/api/user/{nickname:[a-z]+}/create", userHandler.Create).Methods("POST")
 	router.HandleFunc("/api/user/{nickname:[a-z]+}/profile", userHandler.Profile).Methods("GET")
+	router.HandleFunc("/api/user/{nickname:[a-z]+}/profile", userHandler.Update).Methods("POST")
 
 	server := &http.Server{
 		Addr:         ":8080",
