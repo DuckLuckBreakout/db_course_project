@@ -14,7 +14,7 @@ func (u UseCase) Clear() error {
 }
 
 func (u UseCase) Status() (*models.Status, error) {
-	panic("implement me")
+	return u.Repository.Status()
 }
 
 func NewUseCase(repo service.Repository) service.UseCase {
