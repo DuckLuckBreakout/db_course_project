@@ -15,18 +15,46 @@ type Handler struct {
 	UseCase forum.UseCase
 }
 
-func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
-	var forum models.Forum
+func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
+	}
+	defer r.Body.Close()
 
-	forum.Slug = mux.Vars(r)["slug"]
+	var newThread models.Thread
+	err = json.Unmarshal(body, &newThread)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
+	}
 
-	err := h.UseCase.Details(&forum)
+	newThread.Forum = mux.Vars(r)["slug"]
+
+	err = h.UseCase.CreateThread(&newThread)
+	if err == errors.ErrThreadAlreadyCreatedError {
+		http_utils.SetJSONResponse(w, newThread, http.StatusConflict)
+		return
+	}
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
 
-	http_utils.SetJSONResponse(w, forum, http.StatusOK)
+	http_utils.SetJSONResponse(w, newThread, http.StatusCreated)
+}
+
+func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	var forumForDetails models.Forum
+
+	forumForDetails.Slug = mux.Vars(r)["slug"]
+
+	err := h.UseCase.Details(&forumForDetails)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, forumForDetails, http.StatusOK)
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {

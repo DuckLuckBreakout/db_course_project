@@ -28,5 +28,18 @@ CREATE TABLE forums (
 );
 GRANT ALL PRIVILEGES ON TABLE forums TO forum_root;
 
+DROP TABLE IF EXISTS threads CASCADE;
+CREATE TABLE threads (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    author CITEXT NOT NULL REFERENCES users(nickname),
+    forum CITEXT NOT NULL REFERENCES forums(slug),
+    message TEXT NOT NULL,
+    votes INT DEFAULT 0,
+    slug CITEXT,
+    created TIMESTAMP(3) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+GRANT ALL PRIVILEGES ON TABLE threads TO forum_root;
+
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO forum_root;
 
