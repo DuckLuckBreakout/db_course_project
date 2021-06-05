@@ -27,6 +27,9 @@ var (
 	ErrUserAlreadyCreatedError error = Error{
 		Message: "something went wrong",
 	}
+	ErrForumAlreadyCreatedError error = Error{
+		Message: "something went wrong",
+	}
 	ErrSessionNotFound error = Error{
 		Message: "session not found",
 	}
