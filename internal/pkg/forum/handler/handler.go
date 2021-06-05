@@ -6,12 +6,27 @@ import (
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/tools/http_utils"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 )
 
 type Handler struct {
 	UseCase forum.UseCase
+}
+
+func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	var forum models.Forum
+
+	forum.Slug = mux.Vars(r)["slug"]
+
+	err := h.UseCase.Details(&forum)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, forum, http.StatusOK)
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {

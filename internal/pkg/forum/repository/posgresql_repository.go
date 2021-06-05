@@ -13,6 +13,25 @@ type Repository struct {
 	db *sql.DB
 }
 
+func (r Repository) Details(forum *models.Forum) error {
+	row := r.db.QueryRow("SELECT title, \"user\", slug, posts, threads "+
+		"FROM forums "+
+		"WHERE slug = $1", forum.Slug)
+	if err := row.Err(); err != nil {
+		return err
+	}
+	if err := row.Scan(
+		&forum.Title,
+		&forum.User,
+		&forum.Slug,
+		&forum.Posts,
+		&forum.Threads,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r Repository) Create(forum *models.Forum) error {
 	row := r.db.QueryRow("SELECT nickname "+
 		"FROM users "+
