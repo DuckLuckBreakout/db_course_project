@@ -55,6 +55,7 @@ func main() {
 	router.HandleFunc("/api/service/status", serviceHandler.Status).Methods("GET")
 
 	router.HandleFunc("/api/forum/create", forumHandler.Create).Methods("POST")
+	router.HandleFunc("/api/forum/{slug}/details", forumHandler.Details).Methods("GET")
 
 	server := &http.Server{
 		Addr:         ":5000",

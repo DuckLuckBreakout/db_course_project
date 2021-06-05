@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository forum.Repository
 }
 
+func (u UseCase) Details(forum *models.Forum) error {
+	return u.Repository.Details(forum)
+}
+
 func (u UseCase) Create(forum *models.Forum) error {
 	return u.Repository.Create(forum)
 }
