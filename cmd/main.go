@@ -44,7 +44,8 @@ func main() {
 	router.HandleFunc("/api/user/{nickname}/profile", userHandler.Profile).Methods("GET")
 	router.HandleFunc("/api/user/{nickname}/profile", userHandler.Update).Methods("POST")
 
-	router.HandleFunc("/api/service/clear", serviceHandler.Clear).Methods("GET")
+	router.HandleFunc("/api/service/clear", serviceHandler.Clear).Methods("POST")
+	router.HandleFunc("/api/service/status", serviceHandler.Status).Methods("GET")
 
 	server := &http.Server{
 		Addr:         ":5000",
