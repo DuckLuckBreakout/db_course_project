@@ -12,3 +12,10 @@ type Thread struct {
 	Slug    string    `json:"slug"`
 	Created time.Time `json:"created"`
 }
+
+type ThreadSearch struct {
+	Forum  string    `json:"slug"`
+	Limit int32     `json:"limit"`
+	Since time.Time `json:"since"`
+	Desc  bool      `json:"desc"`
+}
