@@ -7,10 +7,98 @@ import (
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
+	"strings"
+	"time"
 )
 
 type Repository struct {
 	db *sql.DB
+}
+
+func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error) {
+	checkForum := r.db.QueryRow("SELECT COUNT(*) " +
+		"FROM forums " +
+		"WHERE slug = $1", thread.Forum)
+	var checkResult int
+	if err := checkForum.Scan(&checkResult); err != nil {
+		return nil, err
+	}
+	if checkResult == 0 {
+		return nil, errors.ErrUserNotFound
+	}
+
+	var sortDirection string
+	if thread.Desc {
+		since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
+		if thread.Since != since {
+			sortDirection = "AND created <= $2 ORDER BY created DESC "
+		} else {
+			sortDirection = "ORDER BY created DESC "
+		}
+	} else {
+		since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
+		if thread.Since != since {
+			sortDirection = "AND created >= $2 ORDER BY created ASC "
+		} else {
+			sortDirection = "ORDER BY created ASC "
+		}
+	}
+
+	if strings.Contains(sortDirection, "$2") {
+		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
+			"FROM threads "+
+			"WHERE forum = $1 " + sortDirection + " " +
+			"LIMIT $3", thread.Forum, thread.Since, thread.Limit)
+		if err != nil {
+			return nil, err
+		}
+		threads := make([]*models.Thread, 0)
+		for rows.Next() {
+			rowThread := &models.Thread{}
+			err := rows.Scan(
+				&rowThread.Id,
+				&rowThread.Title,
+				&rowThread.Author,
+				&rowThread.Forum,
+				&rowThread.Message,
+				&rowThread.Votes,
+				&rowThread.Slug,
+				&rowThread.Created,
+			)
+			if err != nil {
+				return nil, err
+			}
+			threads = append(threads, rowThread)
+		}
+		return threads, nil
+	} else {
+		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
+			"FROM threads "+
+			"WHERE forum = $1 " + sortDirection + " " +
+			"LIMIT $2", thread.Forum, thread.Limit)
+		if err != nil {
+			return nil, err
+		}
+		threads := make([]*models.Thread, 0)
+		for rows.Next() {
+			rowThread := &models.Thread{}
+			err := rows.Scan(
+				&rowThread.Id,
+				&rowThread.Title,
+				&rowThread.Author,
+				&rowThread.Forum,
+				&rowThread.Message,
+				&rowThread.Votes,
+				&rowThread.Slug,
+				&rowThread.Created,
+			)
+			if err != nil {
+				return nil, err
+			}
+			threads = append(threads, rowThread)
+		}
+		return threads, nil
+	}
 }
 
 func (r Repository) CreateThread(thread *models.Thread) error {
@@ -38,8 +126,8 @@ func (r Repository) CreateThread(thread *models.Thread) error {
 			); err != nil {
 				return err
 			}
-			row = r.db.QueryRow("SELECT slug " +
-				"FROM forums " +
+			row = r.db.QueryRow("SELECT slug "+
+				"FROM forums "+
 				"WHERE slug = $1", thread.Forum)
 			if err := row.Scan(&thread.Forum); err != nil {
 				return err
@@ -47,8 +135,8 @@ func (r Repository) CreateThread(thread *models.Thread) error {
 			return errors.ErrThreadAlreadyCreatedError
 		}
 	}
-	row := r.db.QueryRow("SELECT slug " +
-		"FROM forums " +
+	row := r.db.QueryRow("SELECT slug "+
+		"FROM forums "+
 		"WHERE slug = $1", thread.Forum)
 	if err := row.Scan(&thread.Forum); err != nil {
 		return err
