@@ -16,6 +16,26 @@ type Handler struct {
 	UseCase thread.UseCase
 }
 
+func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	var threadInfo models.Thread
+
+	slugOrId := mux.Vars(r)["slug_or_id"]
+	id, err := strconv.Atoi(slugOrId)
+	if err != nil {
+		threadInfo.Slug = slugOrId
+	} else {
+		threadInfo.Id = int32(id)
+	}
+
+	err = h.UseCase.Details(&threadInfo)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, threadInfo, http.StatusOK)
+}
+
 func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

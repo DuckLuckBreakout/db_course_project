@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository thread.Repository
 }
 
+func (u UseCase) Details(thread *models.Thread) error {
+	return u.Repository.Details(thread)
+}
+
 func (u UseCase) Vote(thread *models.ThreadVoice) (*models.Thread, error) {
 	return u.Repository.Vote(thread)
 }

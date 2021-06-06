@@ -10,6 +10,44 @@ type Repository struct {
 	db *sql.DB
 }
 
+func (r Repository) Details(thread *models.Thread) error {
+	var threadId int32
+	if thread.Id == 0 {
+		row := r.db.QueryRow("SELECT id "+
+			"FROM threads "+
+			"WHERE slug = $1", thread.Slug)
+		if err := row.Err(); err != nil {
+			return err
+		}
+		if err := row.Scan(&threadId); err != nil {
+			return err
+		}
+	} else {
+		threadId = thread.Id
+	}
+
+	threadRow := r.db.QueryRow("SELECT author, created, forum, id, message, slug, title, votes "+
+		"FROM threads "+
+		"WHERE id = $1", threadId)
+	if err := threadRow.Err(); err != nil {
+		return err
+	}
+
+	if err := threadRow.Scan(
+		&thread.Author,
+		&thread.Created,
+		&thread.Forum,
+		&thread.Id,
+		&thread.Message,
+		&thread.Slug,
+		&thread.Title,
+		&thread.Votes,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r Repository) Vote(thread *models.ThreadVoice) (*models.Thread, error){
 	var threadId int32
 	if thread.ThreadID == 0 {
