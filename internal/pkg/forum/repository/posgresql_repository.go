@@ -99,7 +99,6 @@ func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error
 		}
 		return threads, nil
 	}
-	return nil, nil
 }
 
 func (r Repository) CreateThread(thread *models.Thread) error {
