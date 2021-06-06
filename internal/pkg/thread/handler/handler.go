@@ -16,6 +16,25 @@ type Handler struct {
 	UseCase thread.UseCase
 }
 
+func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
+	var threadInfo models.ThreadUpdate
+
+	slugOrId := mux.Vars(r)["slug_or_id"]
+	id, err := strconv.Atoi(slugOrId)
+	if err != nil {
+		threadInfo.Slug = slugOrId
+	} else {
+		threadInfo.Id = int32(id)
+	}
+
+	result, err := h.UseCase.UpdateDetails(&threadInfo)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, result, http.StatusOK)}
+
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 	var threadInfo models.Thread
 

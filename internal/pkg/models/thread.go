@@ -27,3 +27,10 @@ type ThreadVoice struct {
 	ThreadID   int32  `json:"thread_id"`
 	ThreadSlug string `json:"thread_slug"`
 }
+
+type ThreadUpdate struct {
+	Id      int32     `json:"id"`
+	Title   string    `json:"title" valid:"notnull"`
+	Message string    `json:"message" valid:"notnull"`
+	Slug    string    `json:"slug"`
+}
