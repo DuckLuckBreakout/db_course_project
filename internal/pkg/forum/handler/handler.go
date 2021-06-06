@@ -37,7 +37,6 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 		newThreadSearch.Since = since
 	}
 
-
 	result, err := h.UseCase.Threads(&newThreadSearch)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newThreadSearch, http.StatusConflict)
