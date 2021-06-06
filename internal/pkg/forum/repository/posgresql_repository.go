@@ -15,9 +15,9 @@ type Repository struct {
 	db *sql.DB
 }
 
-func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error) {
-	checkForum := r.db.QueryRow("SELECT COUNT(*) " +
-		"FROM forums " +
+func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, error) {
+	checkForum := r.db.QueryRow("SELECT COUNT(*) "+
+		"FROM forums "+
 		"WHERE slug = $1", thread.Forum)
 	var checkResult int
 	if err := checkForum.Scan(&checkResult); err != nil {
@@ -47,7 +47,7 @@ func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error
 	if strings.Contains(sortDirection, "$2") {
 		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
 			"FROM threads "+
-			"WHERE forum = $1 " + sortDirection + " " +
+			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $3", thread.Forum, thread.Since, thread.Limit)
 		if err != nil {
 			return nil, err
@@ -74,7 +74,7 @@ func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error
 	} else {
 		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
 			"FROM threads "+
-			"WHERE forum = $1 " + sortDirection + " " +
+			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $2", thread.Forum, thread.Limit)
 		if err != nil {
 			return nil, err

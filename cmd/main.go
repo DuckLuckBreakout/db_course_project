@@ -8,6 +8,9 @@ import (
 	service_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/service/handler"
 	service_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/service/repository"
 	service_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/service/usecase"
+	thread_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread/handler"
+	thread_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread/repository"
+	thread_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread/usecase"
 	user_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/handler"
 	user_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/repository"
 	user_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/user/usecase"
@@ -45,6 +48,10 @@ func main() {
 	forumUseCase := forum_usecase.NewUseCase(forumRepository)
 	forumHandler := forum_handler.NewHandler(forumUseCase)
 
+	threadRepository := thread_repository.NewRepository(postgreSqlConn)
+	threadUseCase := thread_usecase.NewUseCase(threadRepository)
+	threadHandler := thread_handler.NewHandler(threadUseCase)
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/user/{nickname}/create", userHandler.Create).Methods("POST")
@@ -58,6 +65,8 @@ func main() {
 	router.HandleFunc("/api/forum/{slug}/details", forumHandler.Details).Methods("GET")
 	router.HandleFunc("/api/forum/{slug}/create", forumHandler.CreateThread).Methods("POST")
 	router.HandleFunc("/api/forum/{slug}/threads", forumHandler.Threads).Methods("GET")
+
+	router.HandleFunc("/api/thread/{slug_or_id}/vote", threadHandler.Vote).Methods("POST")
 
 	server := &http.Server{
 		Addr:         ":5000",

@@ -41,5 +41,44 @@ CREATE TABLE threads (
 );
 GRANT ALL PRIVILEGES ON TABLE threads TO forum_root;
 
+DROP TABLE IF EXISTS voices CASCADE;
+CREATE TABLE voices (
+    nickname CITEXT REFERENCES users(nickname),
+    voice INT,
+    thread INT REFERENCES threads(id)
+);
+GRANT ALL PRIVILEGES ON TABLE voices TO forum_root;
+
+CREATE OR REPLACE FUNCTION insert_votes() RETURNS TRIGGER AS
+$update_users_forum$
+BEGIN
+    UPDATE threads SET votes=(votes + NEW.voice) WHERE id=NEW.thread;
+    return NEW;
+end
+$update_users_forum$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_votes() RETURNS TRIGGER AS
+$update_users_forum$
+begin
+    IF OLD.voice <> NEW.voice THEN
+        UPDATE threads SET votes=(votes + NEW.voice - OLD.voice) WHERE id=NEW.thread;
+    END IF;
+    return NEW;
+end
+$update_users_forum$ LANGUAGE plpgsql;
+
+CREATE TRIGGER add_vote
+    BEFORE INSERT
+    ON voices
+    FOR EACH ROW
+EXECUTE PROCEDURE insert_votes();
+
+CREATE TRIGGER edit_vote
+    BEFORE UPDATE
+    ON voices
+    FOR EACH ROW
+EXECUTE PROCEDURE update_votes();
+
+
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO forum_root;
 
