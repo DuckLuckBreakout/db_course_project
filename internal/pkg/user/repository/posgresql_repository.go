@@ -35,7 +35,7 @@ func (r *Repository) Create(user *models.User) error {
 }
 
 func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models.User, error) {
-	rows, _ := r.db.Query(
+	rows, err := r.db.Query(
 		"SELECT nickname, fullname, about, email "+
 			"FROM users "+
 			"WHERE nickname = $1 OR email = $2",
@@ -43,6 +43,9 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 		user.Email,
 	)
 
+	if err != nil {
+		return nil, err
+	}
 	users := make([]*models.User, 0)
 	for rows.Next() {
 		rowUser := &models.User{}
@@ -63,13 +66,14 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 
 func (r *Repository) GetUserByNickname(user *models.User) error {
 	row := r.db.QueryRow(
-		"SELECT fullname, about, email "+
+		"SELECT nickname, fullname, about, email "+
 			"FROM users "+
 			"WHERE nickname = $1",
 		user.Nickname,
 	)
 
 	if err := row.Scan(
+		&user.Nickname,
 		&user.Fullname,
 		&user.About,
 		&user.Email,
@@ -81,14 +85,28 @@ func (r *Repository) GetUserByNickname(user *models.User) error {
 }
 
 func (r *Repository) Update(user *models.User) error {
+	setString := "SET "
+	if user.Fullname != "" {
+		setString += " fullname = " + "'" + user.Fullname + "' "
+		if user.About != ""  || user.Email != ""{
+			setString += ", "
+		}
+	}
+	if user.About != "" {
+		setString += " about = " + "'" + user.About + "' "
+		if user.Email != "" {
+			setString += ", "
+		}
+	}
+	if user.Email != "" {
+		setString += " email = " + "'" + user.Email + "' "
+	}
+
 	row, err := r.db.Exec(
 		"UPDATE users "+
-			"SET fullname = $2, about = $3, email = $4 "+
+			setString +
 			"WHERE nickname = $1",
 		user.Nickname,
-		user.Fullname,
-		user.About,
-		user.Email,
 	)
 
 	if err != nil {

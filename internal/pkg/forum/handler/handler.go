@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
@@ -66,6 +67,7 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	newThread.Forum = mux.Vars(r)["slug"]
 
 	err = h.UseCase.CreateThread(&newThread)
+	fmt.Println(err)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newThread, http.StatusConflict)
 		return
