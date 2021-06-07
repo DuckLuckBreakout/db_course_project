@@ -16,6 +16,30 @@ type Handler struct {
 	UseCase thread.UseCase
 }
 
+func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	posts := make([]*models.Post, 0)
+	err = json.Unmarshal(body, &posts)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
+	}
+
+	slugOrId := mux.Vars(r)["slug_or_id"]
+
+	err = h.UseCase.Create(slugOrId, posts)
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, posts, http.StatusCreated)
+}
+
 func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	var threadInfo models.ThreadUpdate
 
@@ -33,7 +57,8 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http_utils.SetJSONResponse(w, result, http.StatusOK)}
+	http_utils.SetJSONResponse(w, result, http.StatusOK)
+}
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 	var threadInfo models.Thread

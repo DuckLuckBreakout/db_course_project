@@ -9,7 +9,7 @@ GRANT ALL PRIVILEGES ON DATABASE forum TO forum_root;
 \connect forum;
 
 DROP TABLE IF EXISTS users CASCADE;
-CREATE TABLE users (
+CREATE UNLOGGED TABLE users (
     nickname CITEXT UNIQUE PRIMARY KEY,
     fullname TEXT NOT NULL,
     about TEXT,
@@ -19,7 +19,7 @@ GRANT ALL PRIVILEGES ON TABLE users TO forum_root;
 
 
 DROP TABLE IF EXISTS forums CASCADE;
-CREATE TABLE forums (
+CREATE UNLOGGED TABLE forums (
    title CITEXT UNIQUE NOT NULL,
    "user" CITEXT UNIQUE REFERENCES users(nickname),
    slug CITEXT UNIQUE NOT NULL PRIMARY KEY,
@@ -29,7 +29,7 @@ CREATE TABLE forums (
 GRANT ALL PRIVILEGES ON TABLE forums TO forum_root;
 
 DROP TABLE IF EXISTS threads CASCADE;
-CREATE TABLE threads (
+CREATE UNLOGGED TABLE threads (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     author CITEXT NOT NULL REFERENCES users(nickname),
@@ -42,12 +42,26 @@ CREATE TABLE threads (
 GRANT ALL PRIVILEGES ON TABLE threads TO forum_root;
 
 DROP TABLE IF EXISTS voices CASCADE;
-CREATE TABLE voices (
+CREATE UNLOGGED TABLE voices (
     nickname CITEXT REFERENCES users(nickname),
     voice INT,
     thread INT REFERENCES threads(id)
 );
 GRANT ALL PRIVILEGES ON TABLE voices TO forum_root;
+
+DROP TABLE IF EXISTS posts CASCADE;
+CREATE UNLOGGED TABLE posts (
+    author CITEXT NOT NULL REFERENCES users(nickname),
+    created TIMESTAMP(3) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    forum CITEXT NOT NULL REFERENCES forums(slug),
+    id BIGSERIAL PRIMARY KEY,
+    is_edited BOOLEAN DEFAULT false,
+    message TEXT NOT NULL,
+    parent BIGINT DEFAULT 0,
+    thread INT REFERENCES threads(id),
+    path BIGINT[] DEFAULT ARRAY []::INTEGER[]
+);
+GRANT ALL PRIVILEGES ON TABLE posts TO forum_root;
 
 CREATE OR REPLACE FUNCTION insert_votes() RETURNS TRIGGER AS
 $update_users_forum$
