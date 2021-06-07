@@ -2,12 +2,90 @@ package repository
 
 import (
 	"database/sql"
+	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
+	"strconv"
 )
 
 type Repository struct {
 	db *sql.DB
+}
+
+func (r Repository) Create(slugOrId string, posts []*models.Post) error {
+	var threadId int32
+	var forum string
+	id, err := strconv.Atoi(slugOrId)
+	if err != nil {
+		row := r.db.QueryRow("SELECT id, forum "+
+			"FROM threads "+
+			"WHERE slug = $1", slugOrId)
+		if err := row.Err(); err != nil {
+			return err
+		}
+		if err := row.Scan(&threadId, &forum); err != nil {
+			return err
+		}
+	} else {
+		threadId = int32(id)
+		row := r.db.QueryRow("SELECT forum "+
+			"FROM threads "+
+			"WHERE id = $1", threadId)
+		if err := row.Err(); err != nil {
+			return err
+		}
+		if err := row.Scan(&forum); err != nil {
+			return err
+		}
+	}
+
+	if len(posts) == 0 {
+		return nil
+	}
+
+	query := "INSERT INTO posts(parent, author, message, thread, forum) " +
+		"VALUES "
+	varIndex := 1
+	var values []interface{}
+	for i, post := range posts {
+		if i != 0 {
+			query += ", "
+		}
+		post.Thread = threadId
+		post.Forum = forum
+		query += "($" + strconv.Itoa(varIndex) + ", $" + strconv.Itoa(varIndex+1) +
+			", $" + strconv.Itoa(varIndex+2) + ", $" + strconv.Itoa(varIndex+3) + ", $" + strconv.Itoa(varIndex+4) + ") "
+		varIndex += 5
+		values = append(values, post.Parent, post.Author, post.Message, post.Thread, post.Forum)
+		if post.Parent != 0 {
+			row := r.db.QueryRow("SELECT COUNT(*) " +
+				"FROM posts " +
+				"WHERE id = $1", post.Parent)
+			var parentId int64
+			if err := row.Scan(&parentId); err != nil {
+				return err
+			}
+			if parentId == 0 {
+				return errors.ErrUserNotFound
+			}
+		}
+
+	}
+	rows, err := r.db.Query(query + " RETURNING id", values...)
+	if err != nil {
+		return err
+	}
+	i := 0
+	for rows.Next() {
+		err := rows.Scan(
+			&posts[i].Id,
+		)
+		i++
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r Repository) UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, error) {
@@ -97,7 +175,7 @@ func (r Repository) Details(thread *models.Thread) error {
 	return nil
 }
 
-func (r Repository) Vote(thread *models.ThreadVoice) (*models.Thread, error){
+func (r Repository) Vote(thread *models.ThreadVoice) (*models.Thread, error) {
 	var threadId int32
 	if thread.ThreadID == 0 {
 		row := r.db.QueryRow("SELECT id "+

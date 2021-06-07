@@ -69,6 +69,7 @@ func main() {
 	router.HandleFunc("/api/thread/{slug_or_id}/vote", threadHandler.Vote).Methods("POST")
 	router.HandleFunc("/api/thread/{slug_or_id}/details", threadHandler.Details).Methods("GET")
 	router.HandleFunc("/api/thread/{slug_or_id}/details", threadHandler.UpdateDetails).Methods("POST")
+	router.HandleFunc("/api/thread/{slug_or_id}/create", threadHandler.Create).Methods("POST")
 
 	server := &http.Server{
 		Addr:         ":5000",

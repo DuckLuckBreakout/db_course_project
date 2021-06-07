@@ -88,7 +88,7 @@ func (r *Repository) Update(user *models.User) error {
 	setString := "SET "
 	if user.Fullname != "" {
 		setString += " fullname = " + "'" + user.Fullname + "' "
-		if user.About != ""  || user.Email != ""{
+		if user.About != "" || user.Email != "" {
 			setString += ", "
 		}
 	}
@@ -104,7 +104,7 @@ func (r *Repository) Update(user *models.User) error {
 
 	row, err := r.db.Exec(
 		"UPDATE users "+
-			setString +
+			setString+
 			"WHERE nickname = $1",
 		user.Nickname,
 	)
