@@ -18,6 +18,8 @@ type Handler struct {
 }
 
 func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -48,6 +50,8 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	http_utils.SetJSONResponse(w, updatePost, http.StatusOK)}
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	postId, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusConflict)

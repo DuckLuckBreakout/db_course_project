@@ -8,4 +8,5 @@ type Repository interface {
 	DetailsForum(id int) (*models.Forum, error)
 	DetailsThread(id int) (*models.Thread, error)
 	UpdateDetails(updatePost *models.Post) (*models.Post, error)
+	Close()
 }

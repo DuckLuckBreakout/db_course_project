@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -12,7 +13,18 @@ type Repository struct {
 	db *sql.DB
 }
 
+func (r *Repository) Close() {
+	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
+		"WHERE datname = 'forum' " +
+		"AND pid <> pg_backend_pid() " +
+		"AND state in ('idle')")
+	if row.Err() != nil {
+		fmt.Println(row.Err())
+	}
+}
+
 func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
+
 	var forum string
 	if thread.Thread == 0 {
 		row := r.db.QueryRow("SELECT id, forum "+
@@ -142,6 +154,9 @@ func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
 		sortString+
 		limitString, values...)
 	if err != nil {
+		if rows != nil {
+			rows.Close()
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -168,6 +183,7 @@ func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
 }
 
 func (r Repository) Create(slugOrId string, posts []*models.Post) error {
+
 	var threadId int32
 	var forum string
 	id, err := strconv.Atoi(slugOrId)
@@ -246,6 +262,7 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 }
 
 func (r Repository) UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, error) {
+
 	var threadId int32
 	if thread.Id == 0 {
 		row := r.db.QueryRow("SELECT id "+
@@ -324,6 +341,7 @@ func (r Repository) UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, 
 }
 
 func (r Repository) Details(thread *models.Thread) error {
+
 	var threadId int32
 	if thread.Id == 0 {
 		row := r.db.QueryRow("SELECT id "+
@@ -362,6 +380,7 @@ func (r Repository) Details(thread *models.Thread) error {
 }
 
 func (r Repository) Vote(thread *models.ThreadVoice) (*models.Thread, error) {
+
 	var threadId int32
 	if thread.ThreadID == 0 {
 		row := r.db.QueryRow("SELECT id "+

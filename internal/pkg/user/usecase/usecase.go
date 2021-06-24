@@ -10,6 +10,10 @@ type UseCase struct {
 	Repository user.Repository
 }
 
+func (u UseCase) Close() {
+	u.Repository.Close()
+}
+
 func NewUseCase(repo user.Repository) user.UseCase {
 	return &UseCase{
 		Repository: repo,

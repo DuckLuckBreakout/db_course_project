@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/post"
@@ -11,7 +12,19 @@ type Repository struct {
 	db *sql.DB
 }
 
+func (r *Repository) Close() {
+	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
+		"WHERE datname = 'forum' " +
+		"AND pid <> pg_backend_pid() " +
+		"AND state in ('idle')")
+	if row.Err() != nil {
+		fmt.Println(row.Err())
+	}
+}
+
+
 func (r Repository) DetailsUser(id int) (*models.User, error) {
+
 	row := r.db.QueryRow("SELECT author " +
 		"FROM posts " +
 		"WHERE id = $1", id)
@@ -46,6 +59,7 @@ func (r Repository) DetailsUser(id int) (*models.User, error) {
 }
 
 func (r Repository) DetailsForum(id int) (*models.Forum, error) {
+
 	row := r.db.QueryRow("SELECT forum " +
 		"FROM posts " +
 		"WHERE id = $1", id)
@@ -81,6 +95,7 @@ func (r Repository) DetailsForum(id int) (*models.Forum, error) {
 }
 
 func (r Repository) DetailsThread(id int) (*models.Thread, error) {
+
 	row := r.db.QueryRow("SELECT thread " +
 		"FROM posts " +
 		"WHERE id = $1", id)
@@ -118,6 +133,7 @@ func (r Repository) DetailsThread(id int) (*models.Thread, error) {
 	return &threadInfo, nil}
 
 func (r Repository) UpdateDetails(updatePost *models.Post) (*models.Post, error) {
+
 	row := r.db.QueryRow("UPDATE posts " +
 		"SET is_edited = $1, message=$2 " +
 		"WHERE id = $3", updatePost.IsEdited, updatePost.Message, updatePost.Id)
@@ -147,6 +163,7 @@ func (r Repository) UpdateDetails(updatePost *models.Post) (*models.Post, error)
 }
 
 func (r Repository) Details(id int) (*models.Post, error) {
+
 	row := r.db.QueryRow("SELECT author, created, forum, id, message, thread, is_edited " +
 		"FROM posts " +
 		"WHERE id = $1", id)

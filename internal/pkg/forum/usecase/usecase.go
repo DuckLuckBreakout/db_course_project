@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository forum.Repository
 }
 
+func (u UseCase) Close() {
+	u.Repository.Close()
+}
+
 func (u UseCase) Users(searchParams *models.UserSearch) ([]*models.User, error) {
 	return u.Repository.Users(searchParams)
 }

@@ -22,6 +22,7 @@ func NewHandler(userUCase user.UseCase) user.Handler {
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -51,6 +52,8 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Profile(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	var userInfo models.User
 
 	userInfo.Nickname = mux.Vars(r)["nickname"]
@@ -65,6 +68,8 @@ func (h Handler) Profile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Update(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)

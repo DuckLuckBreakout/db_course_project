@@ -17,8 +17,19 @@ type Repository struct {
 	db *sql.DB
 }
 
-func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, error) {
 
+func (r *Repository) Close() {
+	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
+		"WHERE datname = 'forum' " +
+		"AND pid <> pg_backend_pid() " +
+		"AND state in ('idle')")
+	if row.Err() != nil {
+		fmt.Println(row.Err())
+	}
+}
+
+
+func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, error) {
 	row := r.db.QueryRow("SELECT slug "+
 		"FROM forums "+
 		"WHERE slug = $1", searchParams.Forum)
@@ -150,6 +161,9 @@ func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, erro
 			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $3", thread.Forum, thread.Since, thread.Limit)
 		if err != nil {
+			if rows != nil {
+				rows.Close()
+			}
 			return nil, err
 		}
 		defer rows.Close()
@@ -179,6 +193,9 @@ func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, erro
 			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $2", thread.Forum, thread.Limit)
 		if err != nil {
+			if rows != nil {
+				rows.Close()
+			}
 			return nil, err
 		}
 		defer rows.Close()
@@ -293,7 +310,6 @@ func (r Repository) Create(forum *models.Forum) error {
 	)
 	err := row.Err()
 	if err != nil {
-		fmt.Println(err)
 		if err.(*pq.Error).Code == "23503" {
 			return errors.ErrUserNotFound
 		}

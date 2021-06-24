@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	forum_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum/handler"
 	forum_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum/repository"
 	forum_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum/usecase"
@@ -21,11 +22,13 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	"time"
 )
 
-func main() {
-	postgreSqlConn, err := sql.Open(
+var postgreSqlConn *sql.DB
+
+func init() {
+	var err error
+	postgreSqlConn, err = sql.Open(
 		"postgres",
 		"user=forum_root "+
 			"password=root "+
@@ -34,12 +37,22 @@ func main() {
 			"port=5433 "+
 			"sslmode=disable ",
 	)
-	//postgreSqlConn.SetMaxIdleConns(100)
-	//postgreSqlConn.SetMaxIdleConns(100)
 	if err != nil {
 		log.Fatal(err)
-	}
-	defer postgreSqlConn.Close()
+	}}
+
+func main() {
+
+	//postgreSqlConn.SetMaxOpenConns(3)
+	//postgreSqlConn.SetMaxIdleConns(3)
+	//postgreSqlConn.SetConnMaxIdleTime(1)
+	//postgreSqlConn.SetMaxOpenConns(3)
+
+	defer func() {
+		fmt.Println("JOPA1")
+		postgreSqlConn.Close()
+		fmt.Println("JOPA2")
+	}()
 
 	userRepository := user_repository.NewRepository(postgreSqlConn)
 	userUseCase := user_usecase.NewUseCase(userRepository)
@@ -85,15 +98,12 @@ func main() {
 	router.HandleFunc("/api/post/{id}/details", postHandler.Details).Methods("GET")
 	router.HandleFunc("/api/post/{id}/details", postHandler.UpdateDetails).Methods("POST")
 
-	server := &http.Server{
-		Addr:         ":5000",
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      router,
-	}
+	http.Handle("/", router)
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+
+	http.ListenAndServe(":5000", http.DefaultServeMux)
+	//
+	//if err := server.ListenAndServe(); err != nil {
+	//	log.Fatal(err)
+	//}
 }
