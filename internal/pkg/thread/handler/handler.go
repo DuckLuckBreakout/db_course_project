@@ -18,7 +18,6 @@ type Handler struct {
 }
 
 func (h Handler) Posts(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	var newPostSearch models.PostSearch
 
@@ -56,7 +55,6 @@ func (h Handler) Posts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -94,7 +92,6 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -126,7 +123,6 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	var threadInfo models.Thread
 
@@ -148,7 +144,6 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -175,6 +170,7 @@ func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
+
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 

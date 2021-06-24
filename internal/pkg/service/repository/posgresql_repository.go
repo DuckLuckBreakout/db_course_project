@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/service"
 )
@@ -11,31 +10,21 @@ type Repository struct {
 	db *sql.DB
 }
 
-func (r *Repository) Close() {
-	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
-		"WHERE datname = 'forum' " +
-		"AND pid <> pg_backend_pid() " +
-		"AND state in ('idle')")
-	if row.Err() != nil {
-		fmt.Println(row.Err())
-	}
-}
-
 func (r Repository) Clear() error {
-	row := r.db.QueryRow("TRUNCATE TABLE users CASCADE")
-	if err := row.Err(); err != nil {
+	_, err := r.db.Exec("TRUNCATE TABLE users CASCADE")
+	if err != nil {
 		return err
 	}
-	row = r.db.QueryRow("TRUNCATE TABLE posts CASCADE")
-	if err := row.Err(); err != nil {
+	_, err = r.db.Exec("TRUNCATE TABLE posts CASCADE")
+	if err != nil {
 		return err
 	}
-	row = r.db.QueryRow("TRUNCATE TABLE threads CASCADE")
-	if err := row.Err(); err != nil {
+	_, err = r.db.Exec("TRUNCATE TABLE threads CASCADE")
+	if err != nil {
 		return err
 	}
-	row = r.db.QueryRow("TRUNCATE TABLE forums CASCADE ")
-	if err := row.Err(); err != nil {
+	_, err = r.db.Exec("TRUNCATE TABLE forums CASCADE ")
+	if err != nil {
 		return err
 	}
 	return nil

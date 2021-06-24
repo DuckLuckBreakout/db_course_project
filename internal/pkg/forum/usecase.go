@@ -8,5 +8,4 @@ type UseCase interface {
 	CreateThread(thread *models.Thread) error
 	Threads(thread *models.ThreadSearch) ([]*models.Thread, error)
 	Users(searchParams *models.UserSearch) ([]*models.User, error)
-	Close()
 }

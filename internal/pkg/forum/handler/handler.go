@@ -19,7 +19,6 @@ type Handler struct {
 }
 
 func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 	var userSearch models.UserSearch
 
 	userSearch.Forum = mux.Vars(r)["slug"]
@@ -32,6 +31,7 @@ func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
 
 	userSearch.Since = r.URL.Query().Get("since")
 
+	fmt.Println("forum/users", userSearch)
 	result, err := h.UseCase.Users(&userSearch)
 
 	if err != nil {
@@ -43,7 +43,6 @@ func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	var newThreadSearch models.ThreadSearch
 
@@ -64,6 +63,7 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 		newThreadSearch.Since = since
 	}
 
+	fmt.Println("forum/threads", newThreadSearch)
 	result, err := h.UseCase.Threads(&newThreadSearch)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newThreadSearch, http.StatusConflict)
@@ -78,7 +78,6 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -110,7 +109,6 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	var forumForDetails models.Forum
 
@@ -126,7 +124,6 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
-	defer h.UseCase.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

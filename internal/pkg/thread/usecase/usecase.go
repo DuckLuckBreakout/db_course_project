@@ -9,10 +9,6 @@ type UseCase struct {
 	Repository thread.Repository
 }
 
-func (u UseCase) Close() {
-	u.Repository.Close()
-}
-
 func (u UseCase) Posts(thread *models.PostSearch) ([]*models.Post, error) {
 	return u.Repository.Posts(thread)
 }

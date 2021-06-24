@@ -8,5 +8,4 @@ type UseCase interface {
 	Posts(thread *models.PostSearch) ([]*models.Post, error)
 	UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, error)
 	Create(slugOrId string, posts []*models.Post) error
-	Close()
 }

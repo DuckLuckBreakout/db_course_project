@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
@@ -15,16 +14,6 @@ import (
 
 type Repository struct {
 	db *sql.DB
-}
-
-func (r *Repository) Close() {
-	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
-		"WHERE datname = 'forum' " +
-		"AND pid <> pg_backend_pid() " +
-		"AND state in ('idle')")
-	if row.Err() != nil {
-		fmt.Println(row.Err())
-	}
 }
 
 func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, error) {
@@ -261,12 +250,12 @@ func (r Repository) CreateThread(thread *models.Thread) error {
 		return err
 	}
 	row = r.db.QueryRow("INSERT INTO threads(title, author, message, forum, slug, created) "+
-		"VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", thread.Title, thread.Author, thread.Message, thread.Forum, thread.Slug, thread.Created)
+		"VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created", thread.Title, thread.Author, thread.Message, thread.Forum, thread.Slug, thread.Created)
 	if err := row.Err(); err != nil {
 		return err
 	}
 
-	if err := row.Scan(&thread.Id); err != nil {
+	if err := row.Scan(&thread.Id, &thread.Created); err != nil {
 		return err
 	}
 	return nil
@@ -299,14 +288,13 @@ func (r Repository) Create(forum *models.Forum) error {
 		return errors.ErrUserNotFound
 	}
 
-	row = r.db.QueryRow(
+	_, err := r.db.Exec(
 		"INSERT INTO forums(title, \"user\", slug) "+
 			"VALUES ($1, $2, $3)",
 		forum.Title,
 		forum.User,
 		forum.Slug,
 	)
-	err := row.Err()
 	if err != nil {
 		if err.(*pq.Error).Code == "23503" {
 			return errors.ErrUserNotFound

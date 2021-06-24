@@ -60,7 +60,7 @@ GRANT ALL PRIVILEGES ON TABLE voices TO forum_root;
 DROP TABLE IF EXISTS posts CASCADE;
 CREATE UNLOGGED TABLE posts (
     author CITEXT NOT NULL REFERENCES users(nickname),
-    created TIMESTAMP(3) DEFAULT '0001-01-01T00:00:00.000Z' NOT NULL,
+    created TIMESTAMP(3) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     forum CITEXT NOT NULL REFERENCES forums(slug),
     id BIGSERIAL PRIMARY KEY,
     is_edited BOOLEAN DEFAULT false,
@@ -96,13 +96,13 @@ begin
 end
 $update_users_forum$ LANGUAGE plpgsql;
 
-CREATE TRIGGER add_vote
+CREATE TRIGGER trigger_insert_vote
     BEFORE INSERT
     ON voices
     FOR EACH ROW
 EXECUTE PROCEDURE insert_votes();
 
-CREATE TRIGGER edit_vote
+CREATE TRIGGER trigger_update_vote
     BEFORE UPDATE
     ON voices
     FOR EACH ROW
@@ -139,7 +139,7 @@ CREATE TRIGGER trigger_insert_threads
 EXECUTE PROCEDURE insert_threads();
 
 
-CREATE FUNCTION update_path_of_nesting() RETURNS TRIGGER AS $$
+CREATE FUNCTION update_path() RETURNS TRIGGER AS $$
 DECLARE
     parent_thread INTEGER;
 BEGIN
@@ -167,11 +167,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_update_path_of_nesting
+CREATE TRIGGER trigger_update_path
     BEFORE INSERT
     ON posts
     FOR EACH ROW
-EXECUTE PROCEDURE update_path_of_nesting();
+EXECUTE PROCEDURE update_path();
 
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO forum_root;
