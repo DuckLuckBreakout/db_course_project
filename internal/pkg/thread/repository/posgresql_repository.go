@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -142,8 +141,6 @@ func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
 		fromString+
 		sortString+
 		limitString, values...)
-	fmt.Println(selectString + fromString + sortString + limitString)
-	fmt.Println(values)
 	if err != nil {
 		return nil, err
 	}
