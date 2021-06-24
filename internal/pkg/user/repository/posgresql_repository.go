@@ -12,16 +12,6 @@ type Repository struct {
 	db *sql.DB
 }
 
-func (r *Repository) Close() {
-	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
-		"WHERE datname = 'forum' " +
-		"AND pid <> pg_backend_pid() " +
-		"AND state in ('idle')")
-	if row.Err() != nil {
-		fmt.Println(row.Err())
-	}
-}
-
 func NewRepository(db *sql.DB) user.Repository {
 	return &Repository{
 		db: db,
@@ -29,8 +19,7 @@ func NewRepository(db *sql.DB) user.Repository {
 }
 
 func (r *Repository) Create(user *models.User) error {
-
-	row := r.db.QueryRow(
+	_, err := r.db.Exec(
 		"INSERT INTO users(nickname, fullname, about, email) "+
 			"VALUES ($1, $2, $3, $4)",
 		user.Nickname,
@@ -39,7 +28,7 @@ func (r *Repository) Create(user *models.User) error {
 		user.Email,
 	)
 
-	if err := row.Err(); err != nil {
+	if err != nil {
 		fmt.Println(err)
 		return err
 	}

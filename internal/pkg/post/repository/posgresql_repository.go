@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/post"
@@ -12,18 +11,7 @@ type Repository struct {
 	db *sql.DB
 }
 
-func (r *Repository) Close() {
-	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
-		"WHERE datname = 'forum' " +
-		"AND pid <> pg_backend_pid() " +
-		"AND state in ('idle')")
-	if row.Err() != nil {
-		fmt.Println(row.Err())
-	}
-}
-
 func (r Repository) DetailsUser(id int) (*models.User, error) {
-
 	row := r.db.QueryRow("SELECT author "+
 		"FROM posts "+
 		"WHERE id = $1", id)
@@ -166,10 +154,10 @@ func (r Repository) UpdateDetails(updatePost *models.Post) (*models.Post, error)
 		return nil, errors.ErrUserNotFound
 	}
 	if message != updatePost.Message {
-		row = r.db.QueryRow("UPDATE posts "+
+		_, err := r.db.Exec("UPDATE posts "+
 			"SET is_edited = $1, message=$2 "+
 			"WHERE id = $3", true, updatePost.Message, updatePost.Id)
-		if err := row.Err(); err != nil {
+		if err != nil {
 			return nil, errors.ErrUserNotFound
 		}
 	}

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -11,16 +10,6 @@ import (
 
 type Repository struct {
 	db *sql.DB
-}
-
-func (r *Repository) Close() {
-	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
-		"WHERE datname = 'forum' " +
-		"AND pid <> pg_backend_pid() " +
-		"AND state in ('idle')")
-	if row.Err() != nil {
-		fmt.Println(row.Err())
-	}
 }
 
 func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
@@ -242,7 +231,7 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 		}
 
 	}
-	rows, err := r.db.Query(query+" RETURNING id", values...)
+	rows, err := r.db.Query(query+" RETURNING id, created", values...)
 	if err != nil {
 		return err
 	}
@@ -252,6 +241,7 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 	for rows.Next() {
 		err := rows.Scan(
 			&posts[i].Id,
+			&posts[i].Created,
 		)
 		i++
 		if err != nil {
@@ -401,9 +391,9 @@ func (r Repository) Vote(thread *models.ThreadVoice) (*models.Thread, error) {
 		return nil, err
 	}
 	if affected, _ := row.RowsAffected(); affected == 0 {
-		row := r.db.QueryRow("INSERT INTO voices(nickname, voice, thread) "+
+		_, err := r.db.Exec("INSERT INTO voices(nickname, voice, thread) "+
 			"VALUES ($1, $2, $3)", thread.Nickname, thread.Voice, threadId)
-		if err := row.Err(); err != nil {
+		if err != nil {
 			return nil, err
 		}
 	}
