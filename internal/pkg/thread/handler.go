@@ -7,4 +7,5 @@ type Handler interface {
 	Details(w http.ResponseWriter, r *http.Request)
 	UpdateDetails(w http.ResponseWriter, r *http.Request)
 	Create(w http.ResponseWriter, r *http.Request)
+	Posts(w http.ResponseWriter, r *http.Request)
 }

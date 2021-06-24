@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -10,6 +11,163 @@ import (
 
 type Repository struct {
 	db *sql.DB
+}
+
+func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
+	var forum string
+	if thread.Thread == 0 {
+		row := r.db.QueryRow("SELECT id, forum "+
+			"FROM threads "+
+			"WHERE slug = $1", thread.ThreadSlug)
+		if err := row.Err(); err != nil {
+			return nil, err
+		}
+		if err := row.Scan(&thread.Thread, &forum); err != nil {
+			return nil, err
+		}
+	} else {
+		row := r.db.QueryRow("SELECT forum "+
+			"FROM threads "+
+			"WHERE id = $1", thread.Thread)
+		if err := row.Err(); err != nil {
+			return nil, err
+		}
+		if err := row.Scan(&forum); err != nil {
+			return nil, err
+		}
+	}
+
+	var selectString, fromString, sortString, sortChar, limitString string
+	var values []interface{}
+
+	if thread.Sort == "" {
+		thread.Sort = "flat"
+	}
+	switch thread.Sort {
+	case "flat":
+		selectString = "SELECT id, parent, author, message, is_edited, forum, thread, created "
+
+		sortString = "ORDER BY id "
+		if thread.Desc {
+			sortString += "DESC "
+			sortChar = " < "
+		} else {
+			sortString += "ASC "
+			sortChar = " > "
+		}
+
+		if thread.Since != 0 {
+			fromString = "FROM posts " +
+				"WHERE thread = $1 AND id " + sortChar + " $2 "
+			limitString = "LIMIT $3 "
+			values = append(values, thread.Thread, thread.Since, thread.Limit)
+		} else {
+			fromString = "FROM posts WHERE thread = $1"
+			limitString = "LIMIT $2 "
+			values = append(values, thread.Thread, thread.Limit)
+		}
+
+	case "tree":
+		selectString = "SELECT p1.id, p1.parent, p1.author, p1.message, p1.is_edited, p1.forum, p1.thread, p1.created "
+
+		sortString = "ORDER BY p1.path[1] "
+		if thread.Desc {
+			sortString += "DESC, "
+			sortChar = " < "
+		} else {
+			sortString += "ASC, "
+			sortChar = " > "
+		}
+		sortString += "p1.path "
+		if thread.Desc {
+			sortString += "DESC "
+		} else {
+			sortString += "ASC "
+		}
+
+		if thread.Since != 0 {
+			fromString = "FROM posts p1 JOIN posts p2 ON (p2.id = $1) WHERE (p1.thread = $2 AND p1.path" + sortChar + "p2.path) "
+			limitString = "LIMIT $3 "
+			values = append(values, thread.Since, thread.Thread, thread.Limit)
+		} else {
+			fromString = "FROM posts p1 WHERE (p1.thread = $1) "
+			limitString = "LIMIT $2 "
+			values = append(values, thread.Thread, thread.Limit)
+		}
+
+	case "parent_tree":
+		selectString = "SELECT p1.id, p1.parent, p1.author, p1.message, p1.is_edited, p1.forum, p1.thread, p1.created "
+
+		sortString = "ORDER BY p1.path[1] "
+		if thread.Desc {
+			sortString += "DESC, "
+			sortChar = " < "
+		} else {
+			sortString += "ASC, "
+			sortChar = " > "
+		}
+		sortString += "p1.path "
+
+		if thread.Since != 0 {
+			if thread.Desc {
+				fromString = "FROM posts p1 WHERE p1.path[1] IN ( " +
+					"SELECT id " +
+					"FROM posts " +
+					"WHERE (thread = $1 AND parent = 0 AND " +
+					"path[1] " + sortChar + " (SELECT path[1] FROM posts WHERE id = $2)) ORDER BY id DESC LIMIT $3 ) "
+			} else {
+				fromString = "FROM posts p1 WHERE p1.path[1] IN ( " +
+					"SELECT id " +
+					"FROM posts " +
+					"WHERE (thread = $1 AND parent = 0 AND " +
+					"path[1] " + sortChar + " (SELECT path[1] FROM posts WHERE id = $2)) ORDER BY id ASC LIMIT $3 ) "
+			}
+
+			values = append(values, thread.Thread, thread.Since, thread.Limit)
+		} else {
+			if thread.Desc {
+				fromString = "FROM posts p1 WHERE p1.path[1] IN ( SELECT id FROM posts WHERE (thread = $1 AND parent = 0) ORDER BY id " + "DESC" + " LIMIT $2 ) "
+			} else {
+				fromString = "FROM posts p1 WHERE p1.path[1] IN ( SELECT id FROM posts WHERE (thread = $1 AND parent = 0) ORDER BY id " + "ASC" + " LIMIT $2 ) "
+			}
+			values = append(values, thread.Thread, thread.Limit)
+		}
+
+	default:
+		return nil, errors.ErrUserNotFound
+
+	}
+
+	rows, err := r.db.Query(selectString+
+		fromString+
+		sortString+
+		limitString, values...)
+	fmt.Println(selectString + fromString + sortString + limitString)
+	fmt.Println(values)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	posts := make([]*models.Post, 0)
+	for rows.Next() {
+		var postFormDb models.Post
+		if err := rows.Scan(
+			&postFormDb.Id,
+			&postFormDb.Parent,
+			&postFormDb.Author,
+			&postFormDb.Message,
+			&postFormDb.IsEdited,
+			&postFormDb.Forum,
+			&postFormDb.Thread,
+			&postFormDb.Created,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, &postFormDb)
+	}
+
+	return posts, nil
 }
 
 func (r Repository) Create(slugOrId string, posts []*models.Post) error {
@@ -21,10 +179,10 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 			"FROM threads "+
 			"WHERE slug = $1", slugOrId)
 		if err := row.Err(); err != nil {
-			return err
+			return errors.ErrUserNotFound
 		}
 		if err := row.Scan(&threadId, &forum); err != nil {
-			return err
+			return errors.ErrUserNotFound
 		}
 	} else {
 		threadId = int32(id)
@@ -32,10 +190,10 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 			"FROM threads "+
 			"WHERE id = $1", threadId)
 		if err := row.Err(); err != nil {
-			return err
+			return errors.ErrUserNotFound
 		}
 		if err := row.Scan(&forum); err != nil {
-			return err
+			return errors.ErrUserNotFound
 		}
 	}
 
@@ -58,23 +216,25 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 		varIndex += 5
 		values = append(values, post.Parent, post.Author, post.Message, post.Thread, post.Forum)
 		if post.Parent != 0 {
-			row := r.db.QueryRow("SELECT COUNT(*) " +
-				"FROM posts " +
+			row := r.db.QueryRow("SELECT COUNT(*) "+
+				"FROM posts "+
 				"WHERE id = $1", post.Parent)
 			var parentId int64
 			if err := row.Scan(&parentId); err != nil {
-				return err
+				return errors.ErrUserNotFound
 			}
 			if parentId == 0 {
-				return errors.ErrUserNotFound
+				return errors.ErrUserAlreadyCreatedError
 			}
 		}
 
 	}
-	rows, err := r.db.Query(query + " RETURNING id", values...)
+	rows, err := r.db.Query(query+" RETURNING id", values...)
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
+
 	i := 0
 	for rows.Next() {
 		err := rows.Scan(
@@ -82,7 +242,7 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 		)
 		i++
 		if err != nil {
-			return err
+			return errors.ErrUserNotFound
 		}
 	}
 	return nil
@@ -100,20 +260,49 @@ func (r Repository) UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, 
 		if err := row.Scan(&threadId); err != nil {
 			return nil, err
 		}
+		if threadId == 0 {
+			return nil, errors.ErrUserNotFound
+		}
 	} else {
 		threadId = thread.Id
 	}
 
-	row, err := r.db.Exec("UPDATE threads "+
-		"SET title = $1, message = $2 "+
-		"WHERE id = $3", thread.Title, thread.Message, threadId)
-	if err != nil {
-		return nil, err
-	}
-	if affected, _ := row.RowsAffected(); affected == 0 {
-		return nil, err
+	var row sql.Result
+	var err error
+
+	if thread.Message != "" && thread.Title != "" {
+		row, err = r.db.Exec("UPDATE threads "+
+			"SET title = $1, message = $2 "+
+			"WHERE id = $3", thread.Title, thread.Message, threadId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
+	if thread.Message == "" && thread.Title != "" {
+		row, err = r.db.Exec("UPDATE threads "+
+			"SET title = $1 "+
+			"WHERE id = $2", thread.Title, threadId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if thread.Message != "" && thread.Title == "" {
+		row, err = r.db.Exec("UPDATE threads "+
+			"SET message = $1 "+
+			"WHERE id = $2", thread.Message, threadId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+
+	if !(thread.Message == "" && thread.Title == "") {
+		if affected, _ := row.RowsAffected(); affected == 0 {
+			return nil, errors.ErrUserNotFound
+		}
+	}
 	threadRow := r.db.QueryRow("SELECT author, created, forum, id, message, slug, title, votes "+
 		"FROM threads "+
 		"WHERE id = $1", threadId)

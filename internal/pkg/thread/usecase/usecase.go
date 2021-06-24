@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository thread.Repository
 }
 
+func (u UseCase) Posts(thread *models.PostSearch) ([]*models.Post, error) {
+	return u.Repository.Posts(thread)
+}
+
 func (u UseCase) Create(slugOrId string, posts []*models.Post) error {
 	return u.Repository.Create(slugOrId, posts)
 }

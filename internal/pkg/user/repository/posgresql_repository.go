@@ -46,6 +46,8 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	users := make([]*models.User, 0)
 	for rows.Next() {
 		rowUser := &models.User{}
