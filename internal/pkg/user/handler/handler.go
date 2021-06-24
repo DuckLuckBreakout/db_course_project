@@ -78,10 +78,21 @@ func (h Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userInfo.Nickname = mux.Vars(r)["nickname"]
-
-	err = h.UseCase.UpdateProfile(&userInfo)
-	if err != nil {
+	if userInfo.Email == "" && userInfo.Fullname == "" && userInfo.About == "" {
+		err = h.UseCase.Profile(&userInfo)
+	} else {
+		err = h.UseCase.UpdateProfile(&userInfo)
+		if err == nil {
+			err = h.UseCase.Profile(&userInfo)
+		}
+	}
+	if err == errors.ErrUserNotFound {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusConflict)
 		return
 	}
 

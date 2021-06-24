@@ -14,3 +14,10 @@ type UserUpdate struct {
 	About    string `json:"about"`
 	Email    string `json:"email"`
 }
+
+type UserSearch struct {
+	Forum string `json:"slug"`
+	Limit int32  `json:"limit"`
+	Since string `json:"since"`
+	Desc  bool   `json:"desc"`
+}
