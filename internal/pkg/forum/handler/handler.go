@@ -19,6 +19,7 @@ type Handler struct {
 }
 
 func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
 	var userSearch models.UserSearch
 
 	userSearch.Forum = mux.Vars(r)["slug"]
@@ -42,6 +43,8 @@ func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	var newThreadSearch models.ThreadSearch
 
 	newThreadSearch.Forum = mux.Vars(r)["slug"]
@@ -75,6 +78,8 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -90,12 +95,13 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	newThread.Forum = mux.Vars(r)["slug"]
 
 	err = h.UseCase.CreateThread(&newThread)
-	fmt.Println(err)
 	if err == errors.ErrThreadAlreadyCreatedError {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, newThread, http.StatusConflict)
 		return
 	}
 	if err != nil {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
@@ -104,6 +110,8 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	var forumForDetails models.Forum
 
 	forumForDetails.Slug = mux.Vars(r)["slug"]
@@ -118,6 +126,8 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)

@@ -18,6 +18,8 @@ type Handler struct {
 }
 
 func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -30,7 +32,6 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
 	}
 
-
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusConflict)
@@ -38,16 +39,31 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	updatePost.Id = int64(id)
 
-	updatePost.IsEdited = true
 	_, err = h.UseCase.UpdateDetails(&updatePost)
+	if err == errors.ErrUserNotFound {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusConflict)
 		return
 	}
 
-	http_utils.SetJSONResponse(w, updatePost, http.StatusOK)}
+	resultData := make(map[string]interface{})
+	resultData["author"] = updatePost.Author
+	resultData["created"] = updatePost.Created
+	resultData["forum"] = updatePost.Forum
+	resultData["id"] = updatePost.Id
+	resultData["message"] = updatePost.Message
+	resultData["thread"] = updatePost.Thread
+	resultData["thread"] = updatePost.Thread
+
+	http_utils.SetJSONResponse(w, updatePost, http.StatusOK)
+}
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	postId, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusConflict)
@@ -58,7 +74,7 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 
 	related := r.URL.Query().Get("related")
 	resultData, err := h.UseCase.Details(postId)
-	result["post"] = resultData
+
 	if err == errors.ErrUserNotFound {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
@@ -67,7 +83,17 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusConflict)
 		return
 	}
-
+	postMap := make(map[string]interface{})
+	postMap["author"] = resultData.Author
+	postMap["created"] = resultData.Created
+	postMap["forum"] = resultData.Forum
+	postMap["id"] = resultData.Id
+	if resultData.IsEdited {
+		postMap["isEdited"] = resultData.IsEdited
+	}
+	postMap["message"] = resultData.Message
+	postMap["thread"] = resultData.Thread
+	result["post"] = postMap
 	if strings.Contains(related, "user") {
 		resultData, err := h.UseCase.DetailsUser(postId)
 		if err == errors.ErrUserNotFound {
@@ -82,7 +108,7 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	if strings.Contains(related, "thread")  {
+	if strings.Contains(related, "thread") {
 		resultData, err := h.UseCase.DetailsThread(postId)
 		if err == errors.ErrUserNotFound {
 			http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
@@ -96,7 +122,7 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	if strings.Contains(related, "forum")  {
+	if strings.Contains(related, "forum") {
 		resultData, err := h.UseCase.DetailsForum(postId)
 		if err == errors.ErrUserNotFound {
 			http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)

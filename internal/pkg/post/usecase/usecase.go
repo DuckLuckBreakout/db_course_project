@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository post.Repository
 }
 
+func (u UseCase) Close() {
+	u.Repository.Close()
+}
+
 func (u UseCase) DetailsUser(id int) (*models.User, error) {
 	return u.Repository.DetailsUser(id)
 }

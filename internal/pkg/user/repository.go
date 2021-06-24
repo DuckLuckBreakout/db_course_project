@@ -7,4 +7,5 @@ type Repository interface {
 	GetAllUsersByNicknameAndEmail(user *models.User) ([]*models.User, error)
 	GetUserByNickname(user *models.User) error
 	Update(user *models.User) error
+	Close()
 }

@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository service.Repository
 }
 
+func (u UseCase) Close() {
+	u.Repository.Close()
+}
+
 func (u UseCase) Clear() error {
 	return u.Repository.Clear()
 }

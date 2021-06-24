@@ -13,9 +13,10 @@ type Handler struct {
 }
 
 func (h Handler) Clear(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
 	err := h.UseCase.Clear()
-	fmt.Println(err)
 	if err != nil {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
@@ -23,6 +24,7 @@ func (h Handler) Clear(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Status(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
 	status, err := h.UseCase.Status()
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)

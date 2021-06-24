@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/user"
@@ -11,6 +12,16 @@ type Repository struct {
 	db *sql.DB
 }
 
+func (r *Repository) Close() {
+	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
+		"WHERE datname = 'forum' " +
+		"AND pid <> pg_backend_pid() " +
+		"AND state in ('idle')")
+	if row.Err() != nil {
+		fmt.Println(row.Err())
+	}
+}
+
 func NewRepository(db *sql.DB) user.Repository {
 	return &Repository{
 		db: db,
@@ -18,6 +29,7 @@ func NewRepository(db *sql.DB) user.Repository {
 }
 
 func (r *Repository) Create(user *models.User) error {
+
 	row := r.db.QueryRow(
 		"INSERT INTO users(nickname, fullname, about, email) "+
 			"VALUES ($1, $2, $3, $4)",
@@ -28,6 +40,7 @@ func (r *Repository) Create(user *models.User) error {
 	)
 
 	if err := row.Err(); err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -58,6 +71,7 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 			&rowUser.Email,
 		)
 		if err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		users = append(users, rowUser)
@@ -67,6 +81,7 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 }
 
 func (r *Repository) GetUserByNickname(user *models.User) error {
+
 	row := r.db.QueryRow(
 		"SELECT nickname, fullname, about, email "+
 			"FROM users "+
@@ -87,6 +102,7 @@ func (r *Repository) GetUserByNickname(user *models.User) error {
 }
 
 func (r *Repository) Update(user *models.User) error {
+
 	setString := "SET "
 	if user.Fullname != "" {
 		setString += " fullname = " + "'" + user.Fullname + "' "

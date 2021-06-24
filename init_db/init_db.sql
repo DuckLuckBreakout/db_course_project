@@ -17,6 +17,8 @@ CREATE UNLOGGED TABLE users (
     about TEXT,
     email CITEXT UNIQUE NOT NULL
 );
+CREATE UNIQUE INDEX ON users(email);
+
 GRANT ALL PRIVILEGES ON TABLE users TO forum_root;
 
 
@@ -41,6 +43,9 @@ CREATE UNLOGGED TABLE threads (
     slug CITEXT,
     created TIMESTAMP(3) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+CREATE INDEX ON threads (slug) WHERE slug IS NOT NULL;
+CREATE INDEX ON threads (forum, created);
+CREATE INDEX ON threads (created);
 GRANT ALL PRIVILEGES ON TABLE threads TO forum_root;
 
 DROP TABLE IF EXISTS voices CASCADE;
@@ -49,6 +54,7 @@ CREATE UNLOGGED TABLE voices (
     voice INT,
     thread INT REFERENCES threads(id)
 );
+CREATE UNIQUE INDEX ON voices(nickname, thread);
 GRANT ALL PRIVILEGES ON TABLE voices TO forum_root;
 
 DROP TABLE IF EXISTS posts CASCADE;
@@ -63,6 +69,13 @@ CREATE UNLOGGED TABLE posts (
     thread INT REFERENCES threads(id),
     path BIGINT[] DEFAULT ARRAY []::INTEGER[]
 );
+CREATE INDEX ON posts((path[1]));
+CREATE INDEX ON posts(id, (path[1]));
+CREATE UNIQUE INDEX ON posts(id, thread);
+CREATE UNIQUE INDEX ON posts(id, author);
+CREATE INDEX ON posts(thread, path, id);
+CREATE INDEX ON posts(thread, id);
+
 GRANT ALL PRIVILEGES ON TABLE posts TO forum_root;
 
 CREATE OR REPLACE FUNCTION insert_votes() RETURNS TRIGGER AS

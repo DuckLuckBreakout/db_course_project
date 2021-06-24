@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/user"
@@ -8,6 +9,10 @@ import (
 
 type UseCase struct {
 	Repository user.Repository
+}
+
+func (u UseCase) Close() {
+	u.Repository.Close()
 }
 
 func NewUseCase(repo user.Repository) user.UseCase {
@@ -20,6 +25,8 @@ func (u UseCase) Create(user *models.User) ([]*models.User, error) {
 	if err := u.Repository.Create(user); err != nil {
 		users, err := u.Repository.GetAllUsersByNicknameAndEmail(user)
 		if err != nil {
+			fmt.Println(err)
+
 			return nil, err
 		}
 		return users, errors.ErrUserAlreadyCreatedError

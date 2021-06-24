@@ -18,6 +18,8 @@ type Handler struct {
 }
 
 func (h Handler) Posts(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	var newPostSearch models.PostSearch
 
 	slugOrId := mux.Vars(r)["slug_or_id"]
@@ -54,6 +56,8 @@ func (h Handler) Posts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -90,6 +94,8 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -120,6 +126,8 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	var threadInfo models.Thread
 
 	slugOrId := mux.Vars(r)["slug_or_id"]
@@ -140,6 +148,8 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
+	defer h.UseCase.Close()
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http_utils.SetJSONResponse(w, errors.ErrBadRequest, http.StatusBadRequest)
@@ -165,7 +175,6 @@ func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
-
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 
