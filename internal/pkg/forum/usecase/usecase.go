@@ -9,6 +9,10 @@ type UseCase struct {
 	Repository forum.Repository
 }
 
+func (u UseCase) Users(searchParams *models.UserSearch) ([]*models.User, error) {
+	return u.Repository.Users(searchParams)
+}
+
 func (u UseCase) Threads(thread *models.ThreadSearch) ([]*models.Thread, error) {
 	return u.Repository.Threads(thread)
 }

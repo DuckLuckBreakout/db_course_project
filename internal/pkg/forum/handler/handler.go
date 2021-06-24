@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
@@ -15,6 +16,29 @@ import (
 
 type Handler struct {
 	UseCase forum.UseCase
+}
+
+func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
+	var userSearch models.UserSearch
+
+	userSearch.Forum = mux.Vars(r)["slug"]
+
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	userSearch.Limit = int32(limit)
+
+	desc, _ := strconv.ParseBool(r.URL.Query().Get("desc"))
+	userSearch.Desc = desc
+
+	userSearch.Since = r.URL.Query().Get("since")
+
+	result, err := h.UseCase.Users(&userSearch)
+
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 
 func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +60,6 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 		since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
 		newThreadSearch.Since = since
 	}
-
 
 	result, err := h.UseCase.Threads(&newThreadSearch)
 	if err == errors.ErrThreadAlreadyCreatedError {
@@ -67,6 +90,7 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	newThread.Forum = mux.Vars(r)["slug"]
 
 	err = h.UseCase.CreateThread(&newThread)
+	fmt.Println(err)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newThread, http.StatusConflict)
 		return
@@ -113,6 +137,7 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		fmt.Println(err)
 		var badResult models.ForumEmpty
 		badResult.Slug = newForum.Slug
 		badResult.User = newForum.User

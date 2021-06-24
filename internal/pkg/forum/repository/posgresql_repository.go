@@ -2,10 +2,12 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/lib/pq"
+	"github.com/bradfitz/slice"
 	_ "github.com/lib/pq"
 	"strings"
 	"time"
@@ -15,9 +17,107 @@ type Repository struct {
 	db *sql.DB
 }
 
-func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error) {
-	checkForum := r.db.QueryRow("SELECT COUNT(*) " +
+func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, error) {
+
+	row := r.db.QueryRow("SELECT slug " +
 		"FROM forums " +
+		"WHERE slug = $1", searchParams.Forum)
+	if err := row.Err(); err != nil {
+		return nil, err
+	}
+	var forumSlug string
+	if err := row.Scan(&forumSlug); err != nil {
+		return nil, err
+	}
+
+	var  sortChar string
+	if searchParams.Desc {
+		//sortString = " DESC "
+		sortChar = " < "
+		if searchParams.Since == "" {
+			searchParams.Since = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+		}
+	} else {
+		//sortString = " ASC "
+		sortChar = " > "
+	}
+
+	rows, err := r.db.Query("SELECT author " +
+		"FROM posts " +
+		"WHERE forum = $1 AND author " + sortChar + " $2 ", searchParams.Forum, searchParams.Since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make(map[string]struct{}, 0)
+	var void struct{}
+
+	for rows.Next() {
+		var user string
+		err := rows.Scan(&user)
+		if err != nil {
+			return nil, err
+		}
+		users[user] = void
+	}
+
+	rows1, err := r.db.Query("SELECT author " +
+		"FROM threads " +
+		"WHERE forum = $1 AND author " + sortChar + " $2 ", searchParams.Forum, searchParams.Since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows1.Close()
+
+	for rows1.Next() {
+		var user string
+		err := rows1.Scan(&user)
+		if err != nil {
+			return nil, err
+		}
+		users[user] = void
+	}
+
+	usersInfo := make([]*models.User, 0)
+	for user, _ := range users {
+		row := r.db.QueryRow("SELECT about, email, fullname, nickname " +
+			"FROM users " +
+			"WHERE nickname = $1", user)
+		if err := row.Err(); err != nil {
+			return nil, err
+		}
+		var userInfo models.User
+		if err := row.Scan(&userInfo.About, &userInfo.Email, &userInfo.Fullname, &userInfo.Nickname); err != nil {
+			return nil, err
+		}
+		usersInfo = append(usersInfo, &userInfo)
+	}
+
+	if sortChar == " > " {
+		slice.Sort(usersInfo[:], func(i, j int) bool {
+			return strings.ToLower(usersInfo[i].Nickname) < strings.ToLower(usersInfo[j].Nickname)
+		})
+	} else {
+		slice.Sort(usersInfo[:], func(i, j int) bool {
+			return strings.ToLower(usersInfo[i].Nickname) > strings.ToLower(usersInfo[j].Nickname)
+		})
+	}
+
+	if searchParams.Limit == 0 {
+		searchParams.Limit = 100
+	}
+
+	sliceLen :=  int32(len(usersInfo))
+	if searchParams.Limit > sliceLen {
+		searchParams.Limit = sliceLen
+	}
+	return usersInfo[:searchParams.Limit], nil
+}
+
+func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, error) {
+	checkForum := r.db.QueryRow("SELECT COUNT(*) "+
+		"FROM forums "+
 		"WHERE slug = $1", thread.Forum)
 	var checkResult int
 	if err := checkForum.Scan(&checkResult); err != nil {
@@ -47,11 +147,13 @@ func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error
 	if strings.Contains(sortDirection, "$2") {
 		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
 			"FROM threads "+
-			"WHERE forum = $1 " + sortDirection + " " +
+			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $3", thread.Forum, thread.Since, thread.Limit)
 		if err != nil {
 			return nil, err
 		}
+		defer rows.Close()
+
 		threads := make([]*models.Thread, 0)
 		for rows.Next() {
 			rowThread := &models.Thread{}
@@ -74,11 +176,13 @@ func (r Repository) Threads(thread *models.ThreadSearch)([]*models.Thread, error
 	} else {
 		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
 			"FROM threads "+
-			"WHERE forum = $1 " + sortDirection + " " +
+			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $2", thread.Forum, thread.Limit)
 		if err != nil {
 			return nil, err
 		}
+		defer rows.Close()
+
 		threads := make([]*models.Thread, 0)
 		for rows.Next() {
 			rowThread := &models.Thread{}
@@ -189,6 +293,7 @@ func (r Repository) Create(forum *models.Forum) error {
 	)
 	err := row.Err()
 	if err != nil {
+		fmt.Println(err)
 		if err.(*pq.Error).Code == "23503" {
 			return errors.ErrUserNotFound
 		}
