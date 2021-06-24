@@ -46,7 +46,6 @@ func (r Repository) DetailsUser(id int) (*models.User, error) {
 }
 
 func (r Repository) DetailsForum(id int) (*models.Forum, error) {
-
 	row := r.db.QueryRow("SELECT forum "+
 		"FROM posts "+
 		"WHERE id = $1", id)

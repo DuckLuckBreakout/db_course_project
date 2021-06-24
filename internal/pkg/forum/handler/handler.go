@@ -73,7 +73,9 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
-
+	for _, el := range result {
+		fmt.Println("Threads", el.Id)
+	}
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 
@@ -105,6 +107,7 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("CreateThread", newThread.Id)
 	http_utils.SetJSONResponse(w, newThread, http.StatusCreated)
 }
 
@@ -119,7 +122,6 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
-
 	http_utils.SetJSONResponse(w, forumForDetails, http.StatusOK)
 }
 

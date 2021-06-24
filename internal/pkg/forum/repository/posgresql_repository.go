@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
@@ -114,6 +115,7 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 }
 
 func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, error) {
+	fmt.Println(thread)
 	checkForum := r.db.QueryRow("SELECT COUNT(*) "+
 		"FROM forums "+
 		"WHERE slug = $1", thread.Forum)
@@ -128,7 +130,7 @@ func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, erro
 	var sortDirection string
 	if thread.Desc {
 		since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
-		if thread.Since != since {
+		if thread.Since != since && !thread.Since.IsZero() {
 			sortDirection = "AND created <= $2 ORDER BY created DESC "
 		} else {
 			sortDirection = "ORDER BY created DESC "
