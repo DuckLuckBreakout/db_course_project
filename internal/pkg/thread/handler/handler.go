@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -118,7 +119,6 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
-
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 
@@ -140,6 +140,7 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("details", threadInfo.Id)
 	http_utils.SetJSONResponse(w, threadInfo, http.StatusOK)
 }
 
@@ -171,6 +172,7 @@ func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("Vote", result.Id)
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 

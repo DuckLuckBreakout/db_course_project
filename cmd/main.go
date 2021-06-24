@@ -34,7 +34,7 @@ func init() {
 			"password=root "+
 			"dbname=forum "+
 			"host=localhost "+
-			"port=5432 "+
+			"port=5433 "+
 			"sslmode=disable ",
 	)
 	if err != nil {
