@@ -34,8 +34,8 @@ func main() {
 			"port=5433 "+
 			"sslmode=disable ",
 	)
-	postgreSqlConn.SetMaxIdleConns(100)
-	postgreSqlConn.SetMaxIdleConns(100)
+	//postgreSqlConn.SetMaxIdleConns(100)
+	//postgreSqlConn.SetMaxIdleConns(100)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,10 +82,8 @@ func main() {
 	router.HandleFunc("/api/thread/{slug_or_id}/create", threadHandler.Create).Methods("POST")
 	router.HandleFunc("/api/thread/{slug_or_id}/posts", threadHandler.Posts).Methods("GET")
 
-
 	router.HandleFunc("/api/post/{id}/details", postHandler.Details).Methods("GET")
 	router.HandleFunc("/api/post/{id}/details", postHandler.UpdateDetails).Methods("POST")
-
 
 	server := &http.Server{
 		Addr:         ":5000",

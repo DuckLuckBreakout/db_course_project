@@ -6,8 +6,8 @@ import (
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
-	"github.com/lib/pq"
 	"github.com/bradfitz/slice"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"strings"
 	"time"
@@ -19,8 +19,8 @@ type Repository struct {
 
 func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, error) {
 
-	row := r.db.QueryRow("SELECT slug " +
-		"FROM forums " +
+	row := r.db.QueryRow("SELECT slug "+
+		"FROM forums "+
 		"WHERE slug = $1", searchParams.Forum)
 	if err := row.Err(); err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 		return nil, err
 	}
 
-	var  sortChar string
+	var sortChar string
 	if searchParams.Desc {
 		//sortString = " DESC "
 		sortChar = " < "
@@ -42,9 +42,9 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 		sortChar = " > "
 	}
 
-	rows, err := r.db.Query("SELECT author " +
-		"FROM posts " +
-		"WHERE forum = $1 AND author " + sortChar + " $2 ", searchParams.Forum, searchParams.Since)
+	rows, err := r.db.Query("SELECT author "+
+		"FROM posts "+
+		"WHERE forum = $1 AND author "+sortChar+" $2 ", searchParams.Forum, searchParams.Since)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +62,9 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 		users[user] = void
 	}
 
-	rows1, err := r.db.Query("SELECT author " +
-		"FROM threads " +
-		"WHERE forum = $1 AND author " + sortChar + " $2 ", searchParams.Forum, searchParams.Since)
+	rows1, err := r.db.Query("SELECT author "+
+		"FROM threads "+
+		"WHERE forum = $1 AND author "+sortChar+" $2 ", searchParams.Forum, searchParams.Since)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +81,8 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 
 	usersInfo := make([]*models.User, 0)
 	for user, _ := range users {
-		row := r.db.QueryRow("SELECT about, email, fullname, nickname " +
-			"FROM users " +
+		row := r.db.QueryRow("SELECT about, email, fullname, nickname "+
+			"FROM users "+
 			"WHERE nickname = $1", user)
 		if err := row.Err(); err != nil {
 			return nil, err
@@ -108,7 +108,7 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 		searchParams.Limit = 100
 	}
 
-	sliceLen :=  int32(len(usersInfo))
+	sliceLen := int32(len(usersInfo))
 	if searchParams.Limit > sliceLen {
 		searchParams.Limit = sliceLen
 	}
