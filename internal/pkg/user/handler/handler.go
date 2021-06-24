@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/user"
@@ -39,11 +40,13 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.UseCase.Create(&newUser)
 	if err == errors.ErrUserAlreadyCreatedError {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, result, http.StatusConflict)
 		return
 	}
 
 	if err != nil {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, errors.CreateError(err), http.StatusConflict)
 		return
 	}

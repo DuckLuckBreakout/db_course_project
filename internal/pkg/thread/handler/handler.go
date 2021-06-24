@@ -175,7 +175,6 @@ func (h Handler) Vote(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
-
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 

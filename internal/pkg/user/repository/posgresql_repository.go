@@ -40,6 +40,7 @@ func (r *Repository) Create(user *models.User) error {
 	)
 
 	if err := row.Err(); err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -58,10 +59,7 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		err := rows.Close()
-		fmt.Println(err)
-	}()
+	defer rows.Close()
 
 	users := make([]*models.User, 0)
 	for rows.Next() {
@@ -73,6 +71,7 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 			&rowUser.Email,
 		)
 		if err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		users = append(users, rowUser)

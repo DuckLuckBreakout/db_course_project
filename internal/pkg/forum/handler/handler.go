@@ -95,12 +95,13 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	newThread.Forum = mux.Vars(r)["slug"]
 
 	err = h.UseCase.CreateThread(&newThread)
-	fmt.Println(err)
 	if err == errors.ErrThreadAlreadyCreatedError {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, newThread, http.StatusConflict)
 		return
 	}
 	if err != nil {
+		fmt.Println(err)
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}

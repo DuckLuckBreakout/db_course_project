@@ -17,7 +17,6 @@ type Repository struct {
 	db *sql.DB
 }
 
-
 func (r *Repository) Close() {
 	row := r.db.QueryRow("SELECT pg_terminate_backend(pid) FROM pg_stat_activity " +
 		"WHERE datname = 'forum' " +
@@ -27,7 +26,6 @@ func (r *Repository) Close() {
 		fmt.Println(row.Err())
 	}
 }
-
 
 func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, error) {
 	row := r.db.QueryRow("SELECT slug "+

@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	forum_handler "github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum/handler"
 	forum_repository "github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum/repository"
 	forum_usecase "github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum/usecase"
@@ -22,6 +21,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"time"
 )
 
 var postgreSqlConn *sql.DB
@@ -39,19 +39,17 @@ func init() {
 	)
 	if err != nil {
 		log.Fatal(err)
-	}}
+	}
+}
 
 func main() {
 
 	//postgreSqlConn.SetMaxOpenConns(3)
-	//postgreSqlConn.SetMaxIdleConns(3)
-	//postgreSqlConn.SetConnMaxIdleTime(1)
-	//postgreSqlConn.SetMaxOpenConns(3)
-
+	postgreSqlConn.SetMaxIdleConns(600)
+	//postgreSqlConn.SetConnMaxIdleTime(100)
+	postgreSqlConn.SetConnMaxLifetime(time.Minute)
 	defer func() {
-		fmt.Println("JOPA1")
 		postgreSqlConn.Close()
-		fmt.Println("JOPA2")
 	}()
 
 	userRepository := user_repository.NewRepository(postgreSqlConn)
@@ -99,7 +97,6 @@ func main() {
 	router.HandleFunc("/api/post/{id}/details", postHandler.UpdateDetails).Methods("POST")
 
 	http.Handle("/", router)
-
 
 	http.ListenAndServe(":5000", http.DefaultServeMux)
 	//

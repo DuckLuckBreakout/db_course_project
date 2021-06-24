@@ -25,10 +25,10 @@ type PostSearch struct {
 }
 
 type PostCommon struct {
-	Id         int64     `json:"id"`
-	Thread     int32     `json:"thread"`
-	Author     string    `json:"author"`
-	Message    string    `json:"message"`
-	Forum      string    `json:"forum"`
-	Created    time.Time `json:"created"`
+	Id      int64     `json:"id"`
+	Thread  int32     `json:"thread"`
+	Author  string    `json:"author"`
+	Message string    `json:"message"`
+	Forum   string    `json:"forum"`
+	Created time.Time `json:"created"`
 }

@@ -311,7 +311,6 @@ func (r Repository) UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, 
 		}
 	}
 
-
 	if !(thread.Message == "" && thread.Title == "") {
 		if affected, _ := row.RowsAffected(); affected == 0 {
 			return nil, errors.ErrUserNotFound
