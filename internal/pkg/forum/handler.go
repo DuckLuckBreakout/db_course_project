@@ -7,4 +7,5 @@ type Handler interface {
 	Details(w http.ResponseWriter, r *http.Request)
 	CreateThread(w http.ResponseWriter, r *http.Request)
 	Threads(w http.ResponseWriter, r *http.Request)
+	Users(w http.ResponseWriter, r *http.Request)
 }

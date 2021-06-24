@@ -1,5 +1,5 @@
 CREATE USER forum_root WITH password 'root';
-CREATE EXTENSION citext;
+-- CREATE EXTENSION citext;
 
 DROP DATABASE IF EXISTS forum;
 CREATE DATABASE forum
@@ -7,6 +7,8 @@ CREATE DATABASE forum
     ENCODING 'utf8';
 GRANT ALL PRIVILEGES ON DATABASE forum TO forum_root;
 \connect forum;
+
+CREATE EXTENSION citext;
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE UNLOGGED TABLE users (
@@ -20,7 +22,7 @@ GRANT ALL PRIVILEGES ON TABLE users TO forum_root;
 
 DROP TABLE IF EXISTS forums CASCADE;
 CREATE UNLOGGED TABLE forums (
-   title CITEXT UNIQUE NOT NULL,
+   title CITEXT NOT NULL,
    "user" CITEXT UNIQUE REFERENCES users(nickname),
    slug CITEXT UNIQUE NOT NULL PRIMARY KEY,
    posts BIGINT DEFAULT 0,
@@ -52,7 +54,7 @@ GRANT ALL PRIVILEGES ON TABLE voices TO forum_root;
 DROP TABLE IF EXISTS posts CASCADE;
 CREATE UNLOGGED TABLE posts (
     author CITEXT NOT NULL REFERENCES users(nickname),
-    created TIMESTAMP(3) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created TIMESTAMP(3) DEFAULT '0001-01-01T00:00:00.000Z' NOT NULL,
     forum CITEXT NOT NULL REFERENCES forums(slug),
     id BIGSERIAL PRIMARY KEY,
     is_edited BOOLEAN DEFAULT false,
@@ -93,6 +95,72 @@ CREATE TRIGGER edit_vote
     FOR EACH ROW
 EXECUTE PROCEDURE update_votes();
 
+CREATE FUNCTION insert_posts() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE forums SET
+    posts = posts + 1
+    WHERE slug = NEW.forum;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_insert_posts
+    AFTER INSERT
+    ON posts
+    FOR EACH ROW
+EXECUTE PROCEDURE insert_posts();
+
+CREATE FUNCTION insert_threads() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE forums SET
+        threads = threads + 1
+    WHERE slug = NEW.forum;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_insert_threads
+    AFTER INSERT
+    ON threads
+    FOR EACH ROW
+EXECUTE PROCEDURE insert_threads();
+
+
+CREATE FUNCTION update_path_of_nesting() RETURNS TRIGGER AS $$
+DECLARE
+    parent_thread INTEGER;
+BEGIN
+    IF NEW.parent = 0 THEN
+        NEW.path = ARRAY [NEW.id];
+    ELSE
+        SELECT thread
+        INTO parent_thread
+        FROM posts
+        WHERE id = new.parent;
+
+        IF parent_thread ISNULL THEN
+            RAISE EXCEPTION 'Parent post not found %', NEW.parent;
+        ELSIF parent_thread <> NEW.thread THEN
+            RAISE EXCEPTION 'Thread not found %', NEW.thread;
+        END IF;
+
+        SELECT path
+        INTO NEW.path
+        FROM posts
+        WHERE id = NEW.parent;
+        NEW.path = array_append(NEW.path, NEW.id);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_path_of_nesting
+    BEFORE INSERT
+    ON posts
+    FOR EACH ROW
+EXECUTE PROCEDURE update_path_of_nesting();
+
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO forum_root;
+
 

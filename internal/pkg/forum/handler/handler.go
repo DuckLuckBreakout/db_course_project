@@ -18,6 +18,29 @@ type Handler struct {
 	UseCase forum.UseCase
 }
 
+func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
+	var userSearch models.UserSearch
+
+	userSearch.Forum = mux.Vars(r)["slug"]
+
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	userSearch.Limit = int32(limit)
+
+	desc, _ := strconv.ParseBool(r.URL.Query().Get("desc"))
+	userSearch.Desc = desc
+
+	userSearch.Since = r.URL.Query().Get("since")
+
+	result, err := h.UseCase.Users(&userSearch)
+
+	if err != nil {
+		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
+		return
+	}
+
+	http_utils.SetJSONResponse(w, result, http.StatusOK)
+}
+
 func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 	var newThreadSearch models.ThreadSearch
 
@@ -114,6 +137,7 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		fmt.Println(err)
 		var badResult models.ForumEmpty
 		badResult.Slug = newForum.Slug
 		badResult.User = newForum.User

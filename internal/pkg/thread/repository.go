@@ -7,4 +7,5 @@ type Repository interface {
 	Details(thread *models.Thread) error
 	UpdateDetails(thread *models.ThreadUpdate) (*models.Thread, error)
 	Create(slugOrId string, posts []*models.Post) error
+	Posts(thread *models.PostSearch) ([]*models.Post, error)
 }

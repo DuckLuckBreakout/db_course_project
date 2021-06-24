@@ -5,7 +5,7 @@ type Forum struct {
 	User    string `json:"user" valid:"notnull"`
 	Slug    string `json:"slug" valid:"notnull"`
 	Posts   int64  `json:"posts"`
-	Threads int32  `json:"treads"`
+	Threads int32  `json:"threads"`
 }
 
 type ForumEmpty struct {

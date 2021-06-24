@@ -9,3 +9,5 @@ FROM ubuntu:latest as server
 RUN apt update && apt install ca-certificates -y && rm -rf /var/cache/apt/*
 COPY --from=build /db_course_project/bin/server /
 CMD ["./server"]
+
+FROM ubuntu:latest
