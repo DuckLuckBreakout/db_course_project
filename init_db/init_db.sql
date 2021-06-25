@@ -30,6 +30,7 @@ CREATE UNLOGGED TABLE forums (
    posts BIGINT DEFAULT 0,
    threads INT DEFAULT 0
 );
+CREATE INDEX ON forums("user");
 GRANT ALL PRIVILEGES ON TABLE forums TO forum_root;
 
 DROP TABLE IF EXISTS threads CASCADE;

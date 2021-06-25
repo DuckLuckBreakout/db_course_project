@@ -75,9 +75,34 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 		}
 		users[user] = void
 	}
+	nickNames := make([]string, 0)
+	for user, _ := range users {
+		nickNames = append(nickNames, user)
+	}
+
+	if sortChar == " > " {
+		slice.Sort(nickNames[:], func(i, j int) bool {
+			return strings.ToLower(nickNames[i]) < strings.ToLower(nickNames[j])
+		})
+	} else {
+		slice.Sort(nickNames[:], func(i, j int) bool {
+			return strings.ToLower(nickNames[i]) > strings.ToLower(nickNames[j])
+		})
+	}
+
+	if searchParams.Limit == 0 {
+		searchParams.Limit = 100
+	}
+
+	sliceLen := int32(len(nickNames))
+	if searchParams.Limit > sliceLen {
+		searchParams.Limit = sliceLen
+	}
+
+	nickNames = nickNames[:searchParams.Limit]
 
 	usersInfo := make([]*models.User, 0)
-	for user, _ := range users {
+	for _, user := range nickNames {
 		row := r.db.QueryRow("SELECT about, email, fullname, nickname "+
 			"FROM users "+
 			"WHERE nickname = $1", user)
@@ -91,25 +116,7 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 		usersInfo = append(usersInfo, &userInfo)
 	}
 
-	if sortChar == " > " {
-		slice.Sort(usersInfo[:], func(i, j int) bool {
-			return strings.ToLower(usersInfo[i].Nickname) < strings.ToLower(usersInfo[j].Nickname)
-		})
-	} else {
-		slice.Sort(usersInfo[:], func(i, j int) bool {
-			return strings.ToLower(usersInfo[i].Nickname) > strings.ToLower(usersInfo[j].Nickname)
-		})
-	}
-
-	if searchParams.Limit == 0 {
-		searchParams.Limit = 100
-	}
-
-	sliceLen := int32(len(usersInfo))
-	if searchParams.Limit > sliceLen {
-		searchParams.Limit = sliceLen
-	}
-	return usersInfo[:searchParams.Limit], nil
+	return usersInfo, nil
 }
 
 func (r Repository) Threads(thread *models.ThreadSearch, sinceString string) ([]*models.Thread, error) {
