@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/post"
@@ -58,7 +57,6 @@ func (h Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	resultData["thread"] = updatePost.Thread
 	resultData["thread"] = updatePost.Thread
 
-	fmt.Println("post updatedetails ", updatePost.Id)
 	http_utils.SetJSONResponse(w, updatePost, http.StatusOK)
 }
 
@@ -135,7 +133,6 @@ func (h Handler) Details(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
-	fmt.Println("post updatedetails ", result)
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 
 }
