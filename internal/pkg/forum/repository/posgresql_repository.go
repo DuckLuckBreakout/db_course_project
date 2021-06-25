@@ -10,7 +10,6 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"strings"
-	"time"
 )
 
 type Repository struct {
@@ -114,7 +113,7 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 	return usersInfo[:searchParams.Limit], nil
 }
 
-func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, error) {
+func (r Repository) Threads(thread *models.ThreadSearch, sinceString string) ([]*models.Thread, error) {
 	fmt.Println(thread)
 	checkForum := r.db.QueryRow("SELECT COUNT(*) "+
 		"FROM forums "+
@@ -129,15 +128,15 @@ func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, erro
 
 	var sortDirection string
 	if thread.Desc {
-		since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
-		if thread.Since != since && !thread.Since.IsZero() {
+		//since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
+		if sinceString != "" {
 			sortDirection = "AND created <= $2 ORDER BY created DESC "
 		} else {
 			sortDirection = "ORDER BY created DESC "
 		}
 	} else {
-		since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
-		if thread.Since != since {
+		//since, _ := time.Parse("2006-01-02T15:04:05.000Z", "3006-01-02T15:04:05.000Z")
+		if sinceString != "" {
 			sortDirection = "AND created >= $2 ORDER BY created ASC "
 		} else {
 			sortDirection = "ORDER BY created ASC "
@@ -148,7 +147,11 @@ func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, erro
 		rows, err := r.db.Query("SELECT id, title, author, forum, message, votes, slug, created "+
 			"FROM threads "+
 			"WHERE forum = $1 "+sortDirection+" "+
-			"LIMIT $3", thread.Forum, thread.Since, thread.Limit)
+			"LIMIT $3", thread.Forum, sinceString, thread.Limit)
+		fmt.Printf("SELECT id, title, author, forum, message, votes, slug, created "+
+			"FROM threads "+
+			"WHERE forum = %s "+sortDirection+" %x "+" "+
+			"LIMIT %d", thread.Forum, sinceString, thread.Limit)
 		if err != nil {
 			if rows != nil {
 				rows.Close()
@@ -181,6 +184,10 @@ func (r Repository) Threads(thread *models.ThreadSearch) ([]*models.Thread, erro
 			"FROM threads "+
 			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $2", thread.Forum, thread.Limit)
+		fmt.Printf("SELECT id, title, author, forum, message, votes, slug, created "+
+			"FROM threads "+
+			"WHERE forum = %s "+sortDirection+" "+
+			"LIMIT %d", thread.Forum, thread.Limit)
 		if err != nil {
 			if rows != nil {
 				rows.Close()
