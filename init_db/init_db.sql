@@ -44,9 +44,11 @@ CREATE UNLOGGED TABLE threads (
     slug CITEXT,
     created TIMESTAMP(3) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-CREATE INDEX ON threads (slug) WHERE slug IS NOT NULL;
-CREATE INDEX ON threads (forum, created);
-CREATE INDEX ON threads (created);
+CREATE INDEX ON threads(slug) WHERE slug IS NOT NULL;
+CREATE INDEX ON threads(forum, created);
+CREATE INDEX ON threads(forum);
+CREATE INDEX ON threads(author);
+CREATE INDEX ON threads(created);
 GRANT ALL PRIVILEGES ON TABLE threads TO forum_root;
 
 DROP TABLE IF EXISTS voices CASCADE;
@@ -73,7 +75,7 @@ CREATE UNLOGGED TABLE posts (
 CREATE INDEX ON posts((path[1]));
 CREATE INDEX ON posts(id, (path[1]));
 CREATE UNIQUE INDEX ON posts(id, thread);
-CREATE UNIQUE INDEX ON posts(id, author);
+CREATE INDEX ON posts(author);
 CREATE INDEX ON posts(thread, path, id);
 CREATE INDEX ON posts(thread, id);
 

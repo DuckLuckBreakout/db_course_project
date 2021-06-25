@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -41,7 +40,6 @@ func (h Handler) Posts(w http.ResponseWriter, r *http.Request) {
 
 	since, _ := strconv.Atoi(r.URL.Query().Get("since"))
 	newPostSearch.Since = int64(since)
-	fmt.Println(slugOrId, r.URL.Query())
 	result, err := h.UseCase.Posts(&newPostSearch)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newPostSearch, http.StatusConflict)
