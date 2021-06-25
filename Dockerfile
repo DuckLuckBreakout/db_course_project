@@ -12,10 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && apt -y install postgresql-12
 USER postgres
 RUN  /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER forum_root WITH SUPERUSER PASSWORD 'root';" &&\
-    psql --command "ALTER USER postgres PASSWORD 'postgres';" &&\
-    createdb -O forum_root forum &&\
-    psql -f /init_db/init_db.sql -d forum &&\
+    psql -f /init_db/init_db.sql -d postgres &&\
     /etc/init.d/postgresql stop
 RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/12/main/pg_hba.conf
 RUN echo "listen_addresses='*'" >> /etc/postgresql/12/main/postgresql.conf
