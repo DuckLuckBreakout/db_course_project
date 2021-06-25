@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/thread"
@@ -142,6 +143,7 @@ func (r Repository) Posts(thread *models.PostSearch) ([]*models.Post, error) {
 		fromString+
 		sortString+
 		limitString, values...)
+	fmt.Println(selectString, fromString, sortString, limitString)
 	if err != nil {
 		if rows != nil {
 			rows.Close()
@@ -216,7 +218,7 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 		query += "($" + strconv.Itoa(varIndex) + ", $" + strconv.Itoa(varIndex+1) +
 			", $" + strconv.Itoa(varIndex+2) + ", $" + strconv.Itoa(varIndex+3) + ", $" + strconv.Itoa(varIndex+4) + ") "
 		varIndex += 5
-		values = append(values, post.Parent, post.Author, post.Message, post.Thread, post.Forum)
+		values = append(values, post.Parent, post.Author, post.Message, threadId, forum)
 		if post.Parent != 0 {
 			row := r.db.QueryRow("SELECT COUNT(*) "+
 				"FROM posts "+
@@ -231,7 +233,7 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 		}
 
 	}
-	rows, err := r.db.Query(query+" RETURNING id, created", values...)
+	rows, err := r.db.Query(query+" RETURNING id, created, parent, thread, forum", values...)
 	if err != nil {
 		return err
 	}
@@ -242,6 +244,9 @@ func (r Repository) Create(slugOrId string, posts []*models.Post) error {
 		err := rows.Scan(
 			&posts[i].Id,
 			&posts[i].Created,
+			&posts[i].Parent,
+			&posts[i].Thread,
+			&posts[i].Forum,
 		)
 		i++
 		if err != nil {
