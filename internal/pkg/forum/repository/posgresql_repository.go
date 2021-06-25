@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
@@ -114,7 +113,6 @@ func (r Repository) Users(searchParams *models.UserSearch) ([]*models.User, erro
 }
 
 func (r Repository) Threads(thread *models.ThreadSearch, sinceString string) ([]*models.Thread, error) {
-	fmt.Println(thread)
 	checkForum := r.db.QueryRow("SELECT COUNT(*) "+
 		"FROM forums "+
 		"WHERE slug = $1", thread.Forum)
@@ -148,10 +146,6 @@ func (r Repository) Threads(thread *models.ThreadSearch, sinceString string) ([]
 			"FROM threads "+
 			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $3", thread.Forum, sinceString, thread.Limit)
-		fmt.Printf("SELECT id, title, author, forum, message, votes, slug, created "+
-			"FROM threads "+
-			"WHERE forum = %s "+sortDirection+" %x "+" "+
-			"LIMIT %d", thread.Forum, sinceString, thread.Limit)
 		if err != nil {
 			if rows != nil {
 				rows.Close()
@@ -184,10 +178,7 @@ func (r Repository) Threads(thread *models.ThreadSearch, sinceString string) ([]
 			"FROM threads "+
 			"WHERE forum = $1 "+sortDirection+" "+
 			"LIMIT $2", thread.Forum, thread.Limit)
-		fmt.Printf("SELECT id, title, author, forum, message, votes, slug, created "+
-			"FROM threads "+
-			"WHERE forum = %s "+sortDirection+" "+
-			"LIMIT %d", thread.Forum, thread.Limit)
+
 		if err != nil {
 			if rows != nil {
 				rows.Close()

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/forum"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
@@ -31,7 +30,6 @@ func (h Handler) Users(w http.ResponseWriter, r *http.Request) {
 
 	userSearch.Since = r.URL.Query().Get("since")
 
-	fmt.Println("forum/users", userSearch)
 	result, err := h.UseCase.Users(&userSearch)
 
 	if err != nil {
@@ -54,7 +52,6 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 	desc, _ := strconv.ParseBool(r.URL.Query().Get("desc"))
 	newThreadSearch.Desc = desc
 
-	fmt.Println(r.URL.Query())
 	sinceString := r.URL.Query().Get("since")
 	if sinceString != "" {
 		since, _ := time.Parse("2006-01-02T15:04:05.000Z", sinceString)
@@ -64,7 +61,6 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 		newThreadSearch.Since = since
 	}
 
-	fmt.Println("forum/threads", newThreadSearch)
 	result, err := h.UseCase.Threads(&newThreadSearch, sinceString)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newThreadSearch, http.StatusConflict)
@@ -74,9 +70,7 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
-	for _, el := range result {
-		fmt.Println("Threads", el.Id)
-	}
+
 	http_utils.SetJSONResponse(w, result, http.StatusOK)
 }
 
@@ -98,17 +92,14 @@ func (h Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 
 	err = h.UseCase.CreateThread(&newThread)
 	if err == errors.ErrThreadAlreadyCreatedError {
-		fmt.Println(err)
 		http_utils.SetJSONResponse(w, newThread, http.StatusConflict)
 		return
 	}
 	if err != nil {
-		fmt.Println(err)
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
 
-	fmt.Println("CreateThread", newThread.Id)
 	http_utils.SetJSONResponse(w, newThread, http.StatusCreated)
 }
 
@@ -147,7 +138,6 @@ func (h Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		fmt.Println(err)
 		var badResult models.ForumEmpty
 		badResult.Slug = newForum.Slug
 		badResult.User = newForum.User

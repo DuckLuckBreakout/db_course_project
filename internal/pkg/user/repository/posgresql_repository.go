@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/models"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/user"
@@ -29,7 +28,6 @@ func (r *Repository) Create(user *models.User) error {
 	)
 
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -60,7 +58,6 @@ func (r *Repository) GetAllUsersByNicknameAndEmail(user *models.User) ([]*models
 			&rowUser.Email,
 		)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		users = append(users, rowUser)

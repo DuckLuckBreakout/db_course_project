@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/DuckLuckBreakout/db_course_project/internal/errors"
 	"github.com/DuckLuckBreakout/db_course_project/internal/pkg/service"
 	"github.com/DuckLuckBreakout/db_course_project/internal/tools/http_utils"
@@ -15,7 +14,6 @@ type Handler struct {
 func (h Handler) Clear(w http.ResponseWriter, r *http.Request) {
 	err := h.UseCase.Clear()
 	if err != nil {
-		fmt.Println(err)
 		http_utils.SetJSONResponse(w, errors.ErrUserNotFound, http.StatusNotFound)
 		return
 	}
