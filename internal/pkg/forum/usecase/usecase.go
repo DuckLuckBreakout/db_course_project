@@ -13,8 +13,8 @@ func (u UseCase) Users(searchParams *models.UserSearch) ([]*models.User, error) 
 	return u.Repository.Users(searchParams)
 }
 
-func (u UseCase) Threads(thread *models.ThreadSearch) ([]*models.Thread, error) {
-	return u.Repository.Threads(thread)
+func (u UseCase) Threads(thread *models.ThreadSearch, sinceString string) ([]*models.Thread, error) {
+	return u.Repository.Threads(thread, sinceString)
 }
 
 func (u UseCase) CreateThread(thread *models.Thread) error {

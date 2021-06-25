@@ -54,6 +54,7 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 	desc, _ := strconv.ParseBool(r.URL.Query().Get("desc"))
 	newThreadSearch.Desc = desc
 
+	fmt.Println(r.URL.Query())
 	sinceString := r.URL.Query().Get("since")
 	if sinceString != "" {
 		since, _ := time.Parse("2006-01-02T15:04:05.000Z", sinceString)
@@ -64,7 +65,7 @@ func (h Handler) Threads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("forum/threads", newThreadSearch)
-	result, err := h.UseCase.Threads(&newThreadSearch)
+	result, err := h.UseCase.Threads(&newThreadSearch, sinceString)
 	if err == errors.ErrThreadAlreadyCreatedError {
 		http_utils.SetJSONResponse(w, newThreadSearch, http.StatusConflict)
 		return
